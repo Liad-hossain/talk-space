@@ -1,0 +1,73 @@
+@import '../../index.css';
+
+.register{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    background: black;
+    opacity: 0.9;
+    border-radius: 10px;
+    padding: 30px;
+}
+
+.register-form{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+}
+
+.register h2{
+    font-size: 25px;
+    font-family: 'Poppins';
+    font-weight: bold;
+    color: var(--home-font-color);
+}
+
+.form-input{
+    width: 300px;
+    height: 40px;
+    border-radius: 5px;
+    border: 1px solid black;
+    padding: 10px;
+    font-size: 15px;
+    font-family: 'Poppins';
+    outline-color: var(--home-font-color);
+    color: #000;
+}
+
+.form-button{
+    width: 100px;
+    height: 35px;
+    border-radius: 8px;
+    background-color: var(--home-font-color);
+    font-size: 15px;
+    font-family: 'Poppins';
+    font-weight: bold;
+    color: #000;
+    border: none;
+    cursor: pointer;
+}
+
+.form-button:hover{
+    background-color: aquamarine;
+}
+
+.register p{
+    font-size: 20px;
+    font-family: 'Poppins';
+    color: var(--home-font-color);
+}
+
+.register p span{
+    font-weight: bold;
+    font-family: 'Poppins';
+}
+
+.register p span:hover{
+    text-decoration: underline;
+    cursor: pointer;
+}

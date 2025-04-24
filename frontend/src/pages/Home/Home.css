@@ -1,0 +1,33 @@
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&family=Lobster&family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&family=Rubik+Wet+Paint&display=swap');
+@import '../../index.css';
+
+.home{
+    min-height: 100vh;
+    background: url('../../assets/images/talkspace_background.jpg') no-repeat;
+    background-size: cover;
+    opacity: 0.8;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+}
+
+.left-home{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.home-title{
+    font-size: 55px;
+    font-family: 'Lobster';
+    font-weight: bold;
+    color: var(--home-font-color)
+}
+
+.right-home{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}

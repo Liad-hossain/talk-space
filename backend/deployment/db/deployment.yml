@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db
+  labels:
+    app: talk-space-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: talk-space-db
+  template:
+    metadata:
+      labels:
+        app: talk-space-db
+    spec:
+      containers:
+      - name: db
+        image: postgres:15.5-alpine
+        ports:
+          - containerPort: 5432
+        env:
+        - name: POSTGRES_USER
+          value: talk-space
+        - name: POSTGRES_PASSWORD
+          value: talk1234
+        - name: POSTGRES_DB
+          value: postgres
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+      volumes:
+      - name: postgres-data
+        persistentVolumeClaim:
+          claimName: postgres-pvc

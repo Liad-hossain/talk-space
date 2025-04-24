@@ -1,0 +1,67 @@
+@import '../../index.css';
+
+.friend{
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 25px;
+    margin-bottom: 10px;
+    padding: 10px;
+    cursor: pointer;
+    height: 80px;
+    border-bottom: 1px solid white;
+    border-radius: 30px;
+    background-color: var(--chat-left-bg-color);
+    color: white;
+}
+
+.friend:hover{
+    background-color: var(--clicked-chatbox-color);
+}
+
+.friend-profile{
+    border-radius: 50%;
+    border: 1px solid white;
+}
+
+.content{
+    display: flex;
+    flex-direction: column;
+    width: 60%;
+    gap: 10px;
+}
+
+.friend-name{
+    font-size: 15px;
+    font-family: 'Poppins';
+    font-weight: 600;
+}
+
+.friend-text{
+    font-size: 15px;
+    font-family: 'Poppins';
+    font-weight: 400;
+}
+
+.friend-history{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.last-send-time{
+    font-size: 15px;
+    font-family: 'Poppins';
+    font-weight: 400;
+}
+
+.friend-unread{
+    font-size: 15px;
+    font-family: 'Poppins';
+    font-weight: 600;
+    padding: 5px;
+    border-radius: 10%;
+    background-color: var(--home-font-color);
+}

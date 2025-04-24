@@ -1,0 +1,97 @@
+@import './content.css';
+
+
+/* My Content */
+
+.my-content{
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.my-text-box{
+    background-color: var(--my-text-block-color);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+    padding: 10px 25px;
+    border-top-left-radius: 45px;
+    border-bottom-left-radius: 45px;
+    border-top-right-radius: 45px;
+    border-bottom-right-radius: 5px;
+    width: fit-content;
+    min-width: 200px;
+    max-width: 500px;
+    color: white;
+}
+
+.my-text{
+    align-self: flex-start;
+    letter-spacing: 0.01rem;
+    font-family: 'Poppins';
+    line-height: 1.5rem;
+    font-weight: 450;
+}
+
+.my-time{
+    align-self: flex-end;
+    letter-spacing: 0.01rem;
+    font-family: 'Poppins';
+    line-height: 1.5rem;
+    font-weight: 450;
+}
+
+.my-photo{
+    border-radius: 50%;
+    border: 1px solid black;
+    align-self: flex-end;
+}
+
+/* Friend Content */
+.friend-content{
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+}
+
+.friend-text-box{
+    background-color: var(--friend-text-block-color);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+    padding: 10px 25px;
+    border-top-left-radius: 45px;
+    border-bottom-left-radius: 5px;
+    border-top-right-radius: 45px;
+    border-bottom-right-radius: 45px;
+    width: fit-content;
+    min-width: 200px;
+    max-width: 500px;
+    color: white;
+}
+
+.friend-text{
+    align-self: flex-start;
+    letter-spacing: 0.01rem;
+    font-family: 'Poppins';
+    line-height: 1.5rem;
+    font-weight: 450;
+}
+
+.friend-time{
+    align-self: flex-end;
+    letter-spacing: 0.01rem;
+    font-family: 'Poppins';
+    line-height: 1.5rem;
+    font-weight: 450;
+}
+
+.friend-photo{
+    border-radius: 50%;
+    border: 1px solid black;
+    align-self: flex-end;
+}

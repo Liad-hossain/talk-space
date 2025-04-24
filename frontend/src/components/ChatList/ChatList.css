@@ -1,0 +1,7 @@
+@import '../../index.css';
+
+.chat-list {
+  min-height: 100vh;
+  padding: 20px;
+  background: var(--chat-left-bg-color);
+}

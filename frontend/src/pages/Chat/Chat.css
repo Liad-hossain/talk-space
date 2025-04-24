@@ -1,0 +1,93 @@
+@import '../../index.css';
+
+
+.chat{
+    display: grid;
+    grid-template-columns: 1fr 2.5fr;
+    height: 100vh;
+}
+
+.chat-left{
+    display: grid;
+    grid-template-rows: 1fr 7fr;
+    overflow-y: scroll;
+    scrollbar-width: none;
+    background: var(--chat-left-bg-color);
+}
+
+.chat-left-top{
+    background: var(--chat-search-bg-color);
+    padding: 20px 25px;
+    margin: 0;
+    border-radius: 30px;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: start;
+    flex-direction: column;
+    gap: 15px;
+    position: sticky;
+    top: 0;
+}
+
+.search{
+    background: white;
+    border-radius: 30px;
+    width: 90%;
+    height:45px;
+    display: grid;
+    grid-template-columns: 0.8fr 9fr;
+    align-items: center;
+    padding-left: 10px;
+}
+
+.menu-icon{
+    cursor: pointer;
+    width: 30px;
+    height: 30px;
+}
+
+.user-search{
+    border: none;
+    outline: none;
+    height: 80%;
+    width: 95%;
+    font-size: 15px;
+    font-family: 'Poppins';
+}
+
+.filter-user{
+    display: grid;
+    grid-template-columns: auto auto auto auto;
+    grid-column-gap: 20px;
+    align-items: center;
+    justify-content: center;
+}
+
+.filter-user span{
+    font-size: 15px;
+    font-family: 'Poppins';
+    font-weight: 500;
+}
+
+.filter-user span:hover{
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.chat-left-bottom{
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-right{
+    height: 100vh;
+    opacity: 0.90;
+    border-radius: 30px;
+}
+
+.default-chat-bg{
+    height: 100vh;
+    background: url('../../assets/icons/talkspace_logo.svg') no-repeat;
+    background-color: #42495c;
+    opacity: 0.9;
+}
