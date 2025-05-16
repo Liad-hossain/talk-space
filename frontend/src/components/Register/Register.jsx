@@ -1,8 +1,9 @@
 import './Register.css';
 import talkspace_logo from '../../assets/icons/talkspace_logo.svg';
-import {userStates, TALKSPACE_BACKEND_BASE_URL} from '../../const';
+import {userStates} from '../../const';
 import {useNavigate} from 'react-router-dom';
 import axios from 'axios';
+import config from '../../externals/config';
 
 
 const Register = (props) => {
@@ -19,7 +20,7 @@ const Register = (props) => {
         }
 
         try {
-            const response = await axios.post(`${TALKSPACE_BACKEND_BASE_URL}/api/accounts/register`, data);
+            const response = await axios.post(config.auth.register(), data);
 
             if (response.status === 200) {
                 console.log('Success: ', response.data);

@@ -5,9 +5,8 @@ import '../../index.css'
 
 const Friend = (props) => {
 
-
     return (
-        <div className='friend' onClick={()=>props.setUserId(props.id)} style={{backgroundColor: props.id === props.userId ? "var(--clicked-chatbox-color)" : undefined}}>
+        <div className='friend' key={props.chatId} onClick={()=>props.setChatId(props.id)} style={{backgroundColor: props.id === props.chatId ? "var(--clicked-chatbox-color)" : undefined}}>
             <img src={Profile} alt="My Profile" width={50} height={50} className='friend-profile'/>
             <div className="content">
                 <span className='friend-name'>{props.name}</span>
@@ -15,7 +14,7 @@ const Friend = (props) => {
             </div>
             <div className="friend-history">
                 <span className='last-send-time'>{props.last_send_time}</span>
-                <span className='friend-unread'>{props.unread_text_count}</span>
+                {props.unread_text_count > 0 && <span className='friend-unread'>{props.unread_text_count}</span>}
             </div>
         </div>
     );

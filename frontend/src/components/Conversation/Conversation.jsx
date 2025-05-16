@@ -6,6 +6,8 @@ import Profile from '../../assets/icons/profile_avatar.svg';
 import SmileIcon from '../../assets/icons/smile_icon.svg'
 import SendIcon from '../../assets/icons/send_icon.svg';
 import ThreeDots from '../../assets/icons/three_dots.svg';
+import axios from 'axios';
+import config from '../../externals/config';
 
 
 const getContents = (user_id) => {
@@ -91,8 +93,43 @@ const getConversations = (conversation_list) =>{
     })
 }
 
+
 const Conversation = (props) => {
-    const contents = getContents(props.user_id);
+    const contents = getContents(props.chatId);
+    const handleSendMessage = async(e) => {
+        e.preventDefault();
+        const message = e.target.message.value
+        e.target.message.value = "";
+        if(!message){
+            console.log("Message is empty. So not sending.");
+            return;
+        }
+
+        try{
+            const data = {
+                id: 2,
+                name: contents.user_name,
+                text: message,
+                last_send_time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }).toLowerCase(),
+                unread_text_count: 0,
+            }
+            const response = await axios.post(
+                config.chat.send_message(props.chatId),
+                data,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Token ${props.access_token}`
+                    }
+                }
+            );
+            if(response.status !== 200){
+                console.log("Error: ", response.data);
+            }
+        }catch(error){
+            console.log("Error: ", error);
+        }
+    }
 
     return (
         <div className='conversation'>
@@ -108,11 +145,13 @@ const Conversation = (props) => {
                 <div className='conversation-content'>
                     {getConversations(contents.conversation_list)}
                 </div>
-                <div className="send-box">
+                <form className="send-box" onSubmit={handleSendMessage}>
                     <img src={SmileIcon} alt='Smile Icon' width={25} height={25} className='smile-icon'/>
-                    <input type='text' placeholder='Type a message here...' className='text-input'/>
-                    <img src={SendIcon} alt='Send Icon' width={30} height={30} className='send-icon'/>
-                </div>
+                    <input type='text' name='message' placeholder='Type a message here...' className='text-input'/>
+                    <button type='submit' className='send-icon-button'>
+                        <img src={SendIcon} alt='Send Icon' width={30} height={30} className='send-icon'/>
+                    </button>
+                </form>
             </div>
         </div>
     );
