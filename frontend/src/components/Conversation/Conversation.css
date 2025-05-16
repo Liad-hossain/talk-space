@@ -78,7 +78,19 @@
   width: 90%;
   border: none;
   outline: none;
-  font-size: 20px;
+  font-size: 15px;
   font-family: "Poppins";
-  font-weight: 600;
+  font-weight: 500;
+}
+
+.send-icon-button {
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.send-icon-button:hover{
+  cursor: pointer;
+  transform: scale(1.3);
+  transition: transform 0.3s ease-in-out;
 }

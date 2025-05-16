@@ -1,25 +1,26 @@
 import './Login.css';
 import talkspace_logo from '../../assets/icons/talkspace_logo.svg';
-import {userStates, TALKSPACE_BACKEND_BASE_URL} from '../../const';
+import {userStates} from '../../const';
 import {useNavigate} from 'react-router-dom';
 import axios from 'axios';
+import config from '../../externals/config';
 
 
 const Login = (props) => {
     const navigate = useNavigate();
 
     const handleLogin = async(e) => {
+        e.preventDefault();
         const data = {
             username: e.target[0].value,
             password: e.target[1].value
         }
 
         try {
-            const response = await axios.post(`${TALKSPACE_BACKEND_BASE_URL}/api/accounts/login`, data);
-            if (response.status !== 200) {
+            const response = await axios.post(config.auth.login(), data);
+            if (response.status === 200) {
                 console.log('Success:', response.data);
-                e.preventDefault();
-                navigate('/chat')
+                navigate('/chat', {state: {user_id: response.data.data.id, access_token: response.data.data.access_token, refresh_token: response.data.data.refresh_token}});
             }
             else{
                 console.log('Error:', response.data);

@@ -1,103 +1,92 @@
 import './ChatList.css';
 import Friend from '../Friend/Friend'
+import axios from 'axios';
+import {getPusherApp, subscribeChannel} from '../../externals/pusher';
+import { useState, useEffect } from 'react';
+import config from '../../externals/config';
+import { useNavigate } from 'react-router-dom';
 
-const getFriendsChat = (props) => {
-    const fiendList = [
-        {
-            id: 1,
-            name: 'John Doe',
-            text: 'Hello',
-            last_send_time: '10:30 pm',
-            unread_text_count: '2'
-        },
-        {
-            id: 2,
-            name: 'Alice',
-            text: 'Good Morning',
-            last_send_time: '06:00 am',
-            unread_text_count: '1'
-        },
-        {
-            id: 3,
-            name: 'Bob',
-            text: 'Good night',
-            last_send_time: '12:00 pm',
-            unread_text_count: '3'
-        },
-        {
-            id: 4,
-            name: 'John Doe',
-            text: 'Hello',
-            last_send_time: '10:30 pm',
-            unread_text_count: '2'
-        },
-        {
-            id: 5,
-            name: 'Alice',
-            text: 'Good Morning',
-            last_send_time: '06:00 am',
-            unread_text_count: '1'
-        },
-        {
-            id: 6,
-            name: 'Bob',
-            text: 'Good night',
-            last_send_time: '12:00 pm',
-            unread_text_count: '3'
-        },
-        {
-            id: 7,
-            name: 'John Doe',
-            text: 'Hello',
-            last_send_time: '10:30 pm',
-            unread_text_count: '2'
-        },
-        {
-            id: 8,
-            name: 'Alice',
-            text: 'Good Morning',
-            last_send_time: '06:00 am',
-            unread_text_count: '1'
-        },
-        {
-            id: 9,
-            name: 'Bob',
-            text: 'Good night',
-            last_send_time: '12:00 pm',
-            unread_text_count: '3'
-        },
-        {
-            id: 10,
-            name: 'John Doe',
-            text: 'Hello',
-            last_send_time: '10:30 pm',
-            unread_text_count: '2'
-        },
-        {
-            id: 11,
-            name: 'Bob',
-            text: 'Good night',
-            last_send_time: '12:00 pm',
-            unread_text_count: '3'
-        },
-        {
-            id: 12,
-            name: 'John Doe',
-            text: 'Hello',
-            last_send_time: '10:30 pm',
-            unread_text_count: '2'
-        }
-    ]
-
-    return fiendList.map((friend) => {
-        return <Friend {...friend} userId = {props.userId} setUserId = {props.setUserId}/>
-    });
-}
 
 const ChatList = (props) => {
+    const navigate = useNavigate();
+
+    const logout = async() => {
+        try {
+            const response = await axios.get(config.auth.logout());
+            if (response.status === 200) {
+                navigate('/')
+            }
+            else{
+                console.log('Error:', response.data);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    const [friendList, setFriendList] = useState([]);
+    const updateFriend = (data) => {
+        console.log("Data received via pusher: ", data);
+        setFriendList(prevList =>
+            prevList.map(friend =>
+                friend.id === data.id ? data : friend
+            )
+        )
+        console.log("Friend List after update: ",friendList);
+    }
+
+    useEffect(() => {
+        const getFriendsChat = async() => {
+            let friendList = [];
+
+            try {
+                const response = await axios.get(
+                    config.chat.get_conversations(props.user_id),
+                    {
+                        headers: {
+                            'Authorization': `Token ${props.access_token}`,
+                        }
+                    }
+                )
+                if (response.status === 200) {
+                    friendList = response.data.data;
+                    console.log('Success: ', response.data);
+                }
+                else if(response.status === 401){
+                    console.log("Unauthorized access, logging out.")
+                    logout();
+                }
+                else{
+                    console.log('Error: ', response.data);
+                }
+            } catch (error) {
+                console.log(error);
+            }
+            setFriendList(friendList);
+        }
+
+        getFriendsChat();
+        const pusher_app = getPusherApp();
+        const channel = subscribeChannel(pusher_app, `User-${props.user_id}`);
+        if(!channel){
+            console.log("Couldn't subscribe to channel.");
+            return;
+        }
+        channel.bind('message', (data) => {
+            console.log(data);
+            updateFriend(data);
+        });
+    }, []);
+
+    useEffect(() => {
+        console.log("FriendList: ", friendList);
+    }, [friendList]);
+
     return (
         <div className='chat-list'>
-            {getFriendsChat(props)}
+            {Array.isArray(friendList) && friendList.map(friend =>
+            <Friend {...friend} chatId = {props.chatId} setChatId = {props.setChatId}/>
+            )}
         </div>
     );
 };

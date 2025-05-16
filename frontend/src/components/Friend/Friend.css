@@ -13,6 +13,7 @@
     border-radius: 30px;
     background-color: var(--chat-left-bg-color);
     color: white;
+    overflow: hidden;
 }
 
 .friend:hover{
@@ -58,7 +59,7 @@
 }
 
 .friend-unread{
-    font-size: 15px;
+    font-size: 12px;
     font-family: 'Poppins';
     font-weight: 600;
     padding: 5px;

@@ -3,11 +3,23 @@ import Conversation from '../../components/Conversation/Conversation';
 import './Chat.css';
 import MenuIcon from '../../assets/icons/menu.svg';
 import SearchIcon from '../../assets/icons/search.svg';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 
 const Chat = () => {
-    const [userId, setUserId] = useState(null);
+    const [chatId, setChatId] = useState(null);
+    const location = useLocation();
+    const navigate = useNavigate();
+    const {user_id, access_token, refresh_token} = location.state || {};
+
+    useEffect(() => {
+        if(!user_id || !access_token || !refresh_token){
+            navigate('/')
+        }
+    })
+
     return (
         <div className='chat'>
             <div className="chat-left">
@@ -25,11 +37,11 @@ const Chat = () => {
                     </div>
                 </div>
                 <div className="chat-left-bottom">
-                    <ChatList userId={userId} setUserId={setUserId}/>
+                    <ChatList chatId={chatId} setChatId={setChatId} user_id={user_id} access_token={access_token} refresh_token={refresh_token}/>
                 </div>
             </div>
             <div className="chat-right">
-                {userId == null ? <div className="default-chat-bg"></div> : <Conversation user_id={userId}/>}
+                {chatId == null ? <div className="default-chat-bg"></div> : <Conversation chatId={chatId} access_token={access_token} refresh_token={refresh_token}/>}
             </div>
         </div>
     );

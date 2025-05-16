@@ -69,7 +69,12 @@ def login(body: dict) -> dict:
     refresh = serializer.get_token(serializer.user)
     logger.info("Login process completed successfull!!!")
 
-    return {"access_token": str(refresh.access_token), "refresh_token": str(refresh)}
+    return {
+        "id": user.id,
+        "username": user.userinfo.username,
+        "access_token": str(refresh.access_token),
+        "refresh_token": str(refresh),
+    }
 
 
 def logout(user: User, refresh_token: str) -> dict:

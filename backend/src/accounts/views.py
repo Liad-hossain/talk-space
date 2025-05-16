@@ -33,7 +33,7 @@ def register_view(request: Request, *args, **kwargs) -> Response:
 
 @api_view(["POST"])
 @permission_classes((AllowAny,))
-@ratelimit(key="user_or_ip", rate="5/m", block=False)
+@ratelimit(key="user_or_ip", rate="15/m", block=False)
 @blacklist_ratelimited(timedelta(minutes=10))
 def login_view(request: Request, *args, **kwargs) -> Response:
     logger.info("Entered login view.")
