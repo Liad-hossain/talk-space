@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "blacklist",
     "accounts",
-    "chat",
+    "inbox",
 ]
 
 MIDDLEWARE = [
