@@ -3,11 +3,15 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+from rest_framework import serializers
 
 from django_ratelimit.decorators import ratelimit
 from blacklist.ratelimit import blacklist_ratelimited
 from datetime import timedelta
-
+from rest_framework_simplejwt.views import TokenRefreshView
+from django.utils.decorators import method_decorator
+from drf_spectacular.utils import extend_schema, inline_serializer
 
 from accounts.services import register, login, logout
 
@@ -49,3 +53,21 @@ def logout_view(request: Request, *args, **kwargs) -> Response:
     user = request.user
     refresh_token = request.data.get("refresh_token", "")
     return Response({"success": True, "data": logout(user, refresh_token)}, status=200)
+
+
+class CustomTokenRefreshView(TokenRefreshView):
+    @extend_schema(
+        operation_id="accounts/refresh",
+        request={"application/json": TokenRefreshSerializer},
+        responses={
+            200: inline_serializer(
+                "Refresh",
+                fields={"access": serializers.CharField()},
+            )
+        },
+    )
+    @method_decorator(ratelimit(key="user_or_ip", rate="15/m", block=False))
+    @method_decorator(blacklist_ratelimited(timedelta(days=1)))
+    def post(self, request: Request, *args, **kwargs) -> Response:
+        response = super().post(request, *args, **kwargs)
+        return response

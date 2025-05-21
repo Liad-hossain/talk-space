@@ -1,6 +1,5 @@
 import logging
 from accounts.serializers import RegisterSerializer, UserSerializer, LoginSerializer
-from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import status
 from accounts.models import User, UserInfo
 from accounts.helpers import is_strong_password
@@ -79,12 +78,6 @@ def login(body: dict) -> dict:
 
 def logout(user: User, refresh_token: str) -> dict:
     logger.info("Starting Logout process....")
-
-    try:
-        token = RefreshToken(refresh_token)
-        token.blacklist()
-    except Exception as e:
-        raise DRFViewException(detail=str(e), status_code=status.HTTP_400_BAD_REQUEST)
 
     user.userinfo.status = "inactive"
     user.userinfo.last_active_time = timezone.now()
