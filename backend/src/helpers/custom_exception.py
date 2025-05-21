@@ -21,3 +21,7 @@ class DRFViewException(APIException):
             error_code = self.default_code
 
         self.detail = {"error": detail, "code": error_code, "success": False}
+
+
+def convert_exception_string_to_one_line(e: str) -> str:
+    return str(e).replace("\n", " ").replace('"', "'")

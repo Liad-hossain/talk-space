@@ -1,9 +1,12 @@
 import logging
+import traceback
 import json
 from django.conf import settings
 from pusher import pusher
 from decouple import config
 from typing import Union, List, Optional
+from helpers.custom_exception import convert_exception_string_to_one_line
+
 
 logger = logging.getLogger("stdout")
 
@@ -55,7 +58,7 @@ def trigger_pusher(channels: Union[str, List[str]], event: str, data: dict) -> b
                 "channels": channels,
                 "event": event,
                 "data": {json.dumps(data)},
-                "error": str(e),
+                "error": convert_exception_string_to_one_line(traceback.format_exc()),
             }
         )
         return False
