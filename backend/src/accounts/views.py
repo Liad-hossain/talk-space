@@ -32,7 +32,7 @@ def register_view(request: Request, *args, **kwargs) -> Response:
     logger.info("Entered register view.")
     body = request.data
     data = register(body)
-    return Response({"success": True, "data": data}, status=200)
+    return Response({"success": True, "dataSource": data}, status=200)
 
 
 @api_view(["POST"])
@@ -43,7 +43,7 @@ def login_view(request: Request, *args, **kwargs) -> Response:
     logger.info("Entered login view.")
     body = request.data
     data = login(body)
-    return Response({"success": True, "data": data}, status=200)
+    return Response({"success": True, "dataSource": data}, status=200)
 
 
 @api_view(["POST"])
@@ -52,7 +52,7 @@ def logout_view(request: Request, *args, **kwargs) -> Response:
     logger.info("Entered logout view.")
     user = request.user
     refresh_token = request.data.get("refresh_token", "")
-    return Response({"success": True, "data": logout(user, refresh_token)}, status=200)
+    return Response({"success": True, "dataSource": logout(user, refresh_token)}, status=200)
 
 
 class CustomTokenRefreshView(TokenRefreshView):
