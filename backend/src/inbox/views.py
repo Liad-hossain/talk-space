@@ -19,7 +19,7 @@ def get_chats_view(request: Request, *args, **kwargs) -> Response:
         return Response(data={"success": False, "message": serializer.errors}, status=400)
 
     data = get_chats(user_id=kwargs.get("user_id"), **serializer.data)
-    return Response(data={"success": True, "data": data}, status=200)
+    return Response(data={"success": True, "dataSource": data}, status=200)
 
 
 @api_view(["GET"])
@@ -31,7 +31,7 @@ def get_conversations_view(request: Request, *args, **kwargs) -> Response:
         return Response(data={"success": False, "message": serializer.errors}, status=400)
 
     data = get_conversations(inbox_id=kwargs.get("inbox_id"), **serializer.data)
-    return Response(data={"success": True, "data": data}, status=200)
+    return Response(data={"success": True, "dataSource": data}, status=200)
 
 
 @api_view(["GET"])
@@ -43,7 +43,7 @@ def get_users_view(request: Request, *args, **kwargs) -> Response:
         return Response(data={"success": False, "message": serializer.errors}, status=400)
 
     data = get_users(user_id=kwargs.get("user_id"), **serializer.data)
-    return Response(data={"success": True, "data": data}, status=200)
+    return Response(data={"success": True, "dataSource": data}, status=200)
 
 
 @api_view(["GET"])
@@ -55,7 +55,7 @@ def get_groups_view(request: Request, *args, **kwargs) -> Response:
         return Response(data={"success": False, "message": serializer.errors}, status=400)
 
     data = get_groups(user_id=kwargs.get("user_id"), **serializer.data)
-    return Response(data={"success": True, "data": data}, status=200)
+    return Response(data={"success": True, "dataSource": data}, status=200)
 
 
 @api_view(["POST"])
@@ -63,4 +63,4 @@ def get_groups_view(request: Request, *args, **kwargs) -> Response:
 def send_message_view(request: Request, *args, **kwargs) -> Response:
     logger.info("Entered send message view.")
     data = send_message(receiver_id=kwargs.get("receiver_id"), data=request.data)
-    return Response(data={"success": True, "data": data}, status=200)
+    return Response(data={"success": True, "dataSource": data}, status=200)
