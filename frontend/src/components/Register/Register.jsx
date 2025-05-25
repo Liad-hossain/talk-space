@@ -3,6 +3,7 @@ import talkspace_logo from '../../assets/icons/talkspace_logo.svg';
 import {userStates} from '../../const';
 import axios from 'axios';
 import config from '../../externals/config';
+import { toast } from 'react-toastify';
 
 
 const Register = (props) => {
@@ -10,7 +11,7 @@ const Register = (props) => {
     const handleRegister = async(e) => {
         e.preventDefault();
         if (e.target[2].value !== e.target[3].value){
-            console.log("Passwords do not match");
+            toast.error("Password and Confirm Password do not match");
             return;
         }
 
@@ -27,14 +28,14 @@ const Register = (props) => {
 
             if (response.status === 200) {
                 e.target.reset();
-                console.log('Success: ', response.data);
+                toast.success("Registered successfully");
             }
             else{
-                console.log('Error: ', response.data);
+                toast.error(response?.data.error || "Registration failed");
             }
 
         } catch (error) {
-            console.log('Error: ', error);
+            toast.error(error.response?.data.error || "Registration failed");
         }
     }
     return (

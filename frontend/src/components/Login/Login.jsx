@@ -4,6 +4,7 @@ import {userStates} from '../../const';
 import {useNavigate} from 'react-router-dom';
 import axios from 'axios';
 import config from '../../externals/config';
+import { toast } from 'react-toastify';
 
 
 const Login = (props) => {
@@ -22,12 +23,16 @@ const Login = (props) => {
                 console.log('Success:', response.data);
                 localStorage.setItem('access_token', response.data.dataSource.access_token);
                 localStorage.setItem('refresh_token', response.data.dataSource.refresh_token);
+
+                toast.success('Logged in successfully!!');
                 navigate('/chat', {state: {user_id: response.data.dataSource.id, username: response.data.dataSource.username}});
             }
             else{
+                toast.error(response?.data.error || "Login failed");
                 console.log('Error:', response.data);
             }
         } catch (error) {
+            toast.error(error.response?.data.error || "Login failed");
             console.error('Error:', error);
         }
     }

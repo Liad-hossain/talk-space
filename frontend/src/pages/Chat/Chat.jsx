@@ -10,6 +10,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import config from '../../externals/config';
 import { selectedStates } from '../../const';
+import { toast } from 'react-toastify';
+
 
 
 const Chat = () => {
@@ -40,15 +42,16 @@ const Chat = () => {
             const response = await axios.post(config.auth.logout(), null, {headers});
             if (response.status === 200) {
                 localStorage.clear();
+                toast.success("Logged out successfully");
                 navigate('/')
             }
             else{
-                console.log('Error:', response.data);
+                toast.error("Error Response but logged out");
                 localStorage.clear();
                 navigate('/')
             }
         } catch (error) {
-            console.error('Error:', error);
+            toast.error("Error Response but logged out");
         }
     }
 
