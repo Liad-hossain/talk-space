@@ -1,0 +1,19 @@
+.emoji-picker-container {
+    position: relative;
+    display: inline-block;
+  }
+
+  .emoji-trigger {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0 10px;
+  }
+
+  .emoji-picker-wrapper {
+    position: absolute;
+    bottom: 40px;
+    left: 0;
+    z-index: 1000;
+  }

@@ -2,18 +2,20 @@ import './Conversation.css';
 import MyContent from '../Content/MyContent';
 import FriendContent from '../Content/FriendContent';
 import Profile from '../../assets/icons/profile_avatar.svg';
-import SmileIcon from '../../assets/icons/smile_icon.svg'
 import SendIcon from '../../assets/icons/send_icon.svg';
 import ThreeDots from '../../assets/icons/three_dots.svg';
 import config from '../../externals/config';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import handleHTTPRequest from '../../httpclient';
 import { getPusherApp, subscribeChannel } from '../../externals/pusher';
+import EmojiPickerButton from '../../externals/EmojiPickerButton';
 
 
 const Conversation = (props) => {
     const [conversations, setConversations] = useState([]);
+    const inboxIdRef = useRef(props.inboxId);
+    const formRef = useRef(null);
     const navigate = useNavigate();
 
 
@@ -23,7 +25,11 @@ const Conversation = (props) => {
             return [];
         }
         const url = config.inbox.get_conversations(inbox_id)
-        const response = await handleHTTPRequest('GET', url, {}, null, null);
+        const params = {
+            offset: 0,
+            limit: 30,
+        }
+        const response = await handleHTTPRequest('GET', url, {}, params, null);
         if (response.status !== 200){
             console.log("Error: ", response.data);
             localStorage.clear();
@@ -79,7 +85,7 @@ const Conversation = (props) => {
 
 
     const updateConversations = (newConversation) => {
-        if(!newConversation || newConversation.inbox_id !== props.inboxId){
+        if(!newConversation || newConversation.inbox_id !== inboxIdRef.current){
             return;
         }
 
@@ -101,9 +107,9 @@ const Conversation = (props) => {
 
     const handleSendMessage = async(e) => {
         e.preventDefault();
-        const message = e.target.message.value
-        e.target.message.value = "";
-        if(!message){
+        const message = formRef.current.message.value;
+        formRef.current.message.value = "";
+        if(!message.trim()){
             console.log("Message is empty. So not sending.");
             return;
         }
@@ -147,18 +153,32 @@ const Conversation = (props) => {
         }
     }
 
+    const handleEmojiSelect = (emoji, e) => {
+        formRef.current.message.value += emoji;
+        console.log(e.target.value);
+    };
+
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          handleSendMessage(e);
+        }
+    };
+
+
     useEffect(() => {
         getConversations(props.inboxId);
+        inboxIdRef.current = props.inboxId;
         const pusher_app = getPusherApp();
         const channel = subscribeChannel(pusher_app, `message_${props.user_id}`);
         if(!channel){
             console.log("Couldn't subscribe to channel.");
             return;
         }
-        const handler = (data) => {
+        channel.bind('message', (data) => {
             updateConversations(data);
-        }
-        channel.bind('message', handler);
+        });
     },[props.inboxId, props.user_id]);
 
 
@@ -176,8 +196,8 @@ const Conversation = (props) => {
                 <div className='conversation-content'>
                     {getConversationComponents(conversations)}
                 </div>
-                <form className="send-box" onSubmit={handleSendMessage}>
-                    <img src={SmileIcon} alt='Smile Icon' width={25} height={25} className='smile-icon'/>
+                <form ref={formRef} className="send-box" onKeyDown={handleKeyDown} onSubmit={handleSendMessage}>
+                    <EmojiPickerButton onEmojiClick={handleEmojiSelect}/>
                     <input type='text' name='message' placeholder='Type a message here...' className='text-input'/>
                     <button type='submit' className='send-icon-button'>
                         <img src={SendIcon} alt='Send Icon' width={30} height={30} className='send-icon'/>
