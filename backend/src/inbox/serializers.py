@@ -16,9 +16,9 @@ class MessageSerializer(serializers.Serializer):
 
 class ChatSerializer(serializers.Serializer):
     inbox_id = serializers.IntegerField(required=True)
-    group_name = serializers.CharField(max_length=255, allow_blank=True, allow_null=True, default="")
+    inbox_name = serializers.CharField(max_length=255, allow_blank=True, allow_null=True, default="")
     is_group = serializers.BooleanField(default=False)
-    members = serializers.ListField(child=serializers.DictField(), required=True)
+    inbox_members = serializers.ListField(child=serializers.DictField(), required=True)
     is_archived = serializers.BooleanField(default=False)
     is_muted = serializers.BooleanField(default=False)
     last_message = serializers.CharField(max_length=255, default="")
@@ -39,11 +39,15 @@ class ConversationSerializer(serializers.Serializer):
 
 class UserSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=True)
+    inbox_id = serializers.IntegerField(required=False, default="")
     username = serializers.CharField(required=True, max_length=255)
     profile_photo = serializers.CharField(required=False, allow_null=True, max_length=255)
     status = serializers.CharField(required=True, max_length=255)
+    inbox_members = serializers.ListField(child=serializers.DictField(), required=True)
 
 
 class GroupSerializer(serializers.Serializer):
-    id = serializers.IntegerField(required=True)
-    group_name = serializers.CharField(required=True, max_length=255)
+    inbox_id = serializers.IntegerField(required=True)
+    inbox_name = serializers.CharField(required=True, max_length=255)
+    profile_photo = serializers.CharField(required=False, allow_null=True, max_length=255)
+    inbox_members = serializers.ListField(child=serializers.DictField(), required=True)

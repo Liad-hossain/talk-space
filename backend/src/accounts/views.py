@@ -51,8 +51,7 @@ def login_view(request: Request, *args, **kwargs) -> Response:
 def logout_view(request: Request, *args, **kwargs) -> Response:
     logger.info("Entered logout view.")
     user = request.user
-    refresh_token = request.data.get("refresh_token", "")
-    return Response({"success": True, "dataSource": logout(user, refresh_token)}, status=200)
+    return Response({"success": True, "dataSource": logout(user)}, status=200)
 
 
 class CustomTokenRefreshView(TokenRefreshView):

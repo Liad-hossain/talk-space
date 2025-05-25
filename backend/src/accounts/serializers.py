@@ -20,8 +20,8 @@ class RegisterSerializer(ValidationOnlySerializer):
     username = serializers.CharField(required=True, max_length=255)
     email = serializers.EmailField(required=True, max_length=255)
     password = serializers.CharField(required=True, max_length=255)
-    city = serializers.CharField(required=False, max_length=255)
-    country = serializers.CharField(required=False, max_length=255)
+    city = serializers.CharField(required=False, allow_null=True, allow_blank=True, max_length=255)
+    country = serializers.CharField(required=False, allow_null=True, allow_blank=True, max_length=255)
 
 
 class UserSerializer(serializers.ModelSerializer):

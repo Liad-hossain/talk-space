@@ -20,7 +20,9 @@ const Login = (props) => {
             const response = await axios.post(config.auth.login(), data);
             if (response.status === 200) {
                 console.log('Success:', response.data);
-                navigate('/chat', {state: {user_id: response.data.data.id, access_token: response.data.data.access_token, refresh_token: response.data.data.refresh_token}});
+                localStorage.setItem('access_token', response.data.dataSource.access_token);
+                localStorage.setItem('refresh_token', response.data.dataSource.refresh_token);
+                navigate('/chat', {state: {user_id: response.data.dataSource.id, username: response.data.dataSource.username}});
             }
             else{
                 console.log('Error:', response.data);
@@ -38,7 +40,7 @@ const Login = (props) => {
                 <input type='username' placeholder='Username' className='form-input' required/>
                 <input type='password' placeholder='Password' className='form-input' required/>
                 <button type='submit' className='form-button'>Sign In</button>
-            </form>api/accounts/check-health
+            </form>
             <p>Don't have an account? <span onClick={()=>props.setUserState(userStates.REGISTER)}>Sign up here</span></p>
         </div>
     );

@@ -76,7 +76,7 @@ def login(body: dict) -> dict:
     }
 
 
-def logout(user: User, refresh_token: str) -> dict:
+def logout(user: User) -> dict:
     logger.info("Starting Logout process....")
 
     user.userinfo.status = "inactive"

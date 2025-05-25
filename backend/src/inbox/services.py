@@ -9,6 +9,7 @@ from django.db.models import Q, F, Count, OuterRef, Subquery, IntegerField, Quer
 from externals.pusher import trigger_pusher
 from helpers.const import UserStatus
 from datetime import datetime, timezone
+from rest_framework.exceptions import APIException
 
 
 logger = logging.getLogger("stdout")
@@ -25,8 +26,8 @@ def get_chats(user_id: int, offset: int = 0, limit: int = 20, **kwargs) -> list[
                 is_seen=False,
             )
             .values("message__inbox")
-            .annotate(count=Count("id"))
-            .values("count")
+            .annotate(unseen_count=Count("id"))
+            .values("unseen_count")
         )
 
         inboxes = (
@@ -42,6 +43,7 @@ def get_chats(user_id: int, offset: int = 0, limit: int = 20, **kwargs) -> list[
                 inbox_id=inbox.id,
             )
 
+            receiver_id = None
             members = list()
             for member in inbox_members:
                 members.append(
@@ -51,11 +53,18 @@ def get_chats(user_id: int, offset: int = 0, limit: int = 20, **kwargs) -> list[
                         "is_blocked": member.is_blocked,
                     }
                 )
+                if member.user_id != user_id:
+                    receiver_id = member.user_id
 
             inbox_data = inbox.__dict__
             inbox_data["inbox_id"] = inbox_data.pop("id")
-            inbox_data["members"] = members
-            print(inbox_data)
+            inbox_data["inbox_members"] = members
+            inbox_data["unseen_count"] = inbox_data["unseen_count"] if inbox_data["unseen_count"] else 0
+
+            if not inbox.is_group and receiver_id:
+                user = User.objects.filter(id=receiver_id).only("id", "username").first()
+                if user:
+                    inbox_data["inbox_name"] = user.username
             serializer = ChatSerializer(data=inbox_data)
             if not serializer.is_valid():
                 logger.error(
@@ -69,6 +78,9 @@ def get_chats(user_id: int, offset: int = 0, limit: int = 20, **kwargs) -> list[
                 )
 
             chats.append(serializer.data)
+    except APIException as error:
+        raise DRFViewException(detail=error.detail, status_code=status.HTTP_400_BAD_REQUEST)
+
     except Exception:
         logger.error(
             {
@@ -87,9 +99,9 @@ def get_conversations(inbox_id: int, offset: int = 0, limit: int = 20, **kwargs)
     conversations = list()
 
     try:
-        messages = Message.objects.filter(inbox_id=inbox_id,).order_by(
-            "-created_at"
-        )[offset : offset + limit]
+        messages = Message.objects.filter(inbox_id=inbox_id, is_deleted=False).order_by("-created_at")[
+            offset : offset + limit
+        ]
 
         for message in messages:
             attachments = list()
@@ -119,6 +131,9 @@ def get_conversations(inbox_id: int, offset: int = 0, limit: int = 20, **kwargs)
                 )
 
             conversations.append(serializer.data)
+    except APIException as error:
+        raise DRFViewException(detail=error.detail, status_code=status.HTTP_400_BAD_REQUEST)
+
     except Exception:
         logger.error(
             {
@@ -154,6 +169,40 @@ def get_users(user_id: int, is_active: bool | None = None, offset: int = 0, limi
         )
 
         for user in users_qs:
+            inbox = (
+                Inbox.objects.filter(
+                    inboxmember__user_id__in=[user_id, user["id"]],
+                )
+                .only(
+                    "id",
+                )
+                .annotate(user_count=Count("inboxmember__user_id"))
+                .filter(user_count=2)
+            )
+            members = list()
+            if inbox.exists():
+                inbox_members = InboxMember.objects.filter(
+                    inbox_id=inbox[0].id,
+                )
+                for member in inbox_members:
+                    members.append(
+                        {
+                            "user_id": member.user_id,
+                            "role": member.role,
+                            "is_blocked": member.is_blocked,
+                        }
+                    )
+            else:
+                members.append(
+                    {
+                        "user_id": user["id"],
+                        "role": "user",
+                        "is_blocked": False,
+                    }
+                )
+
+            user["inbox_members"] = members
+            user["inbox_id"] = inbox[0].id if inbox.exists() else 0
             serializer = UserSerializer(data=user)
             if not serializer.is_valid():
                 logger.error(
@@ -167,7 +216,10 @@ def get_users(user_id: int, is_active: bool | None = None, offset: int = 0, limi
                 )
 
             users.append(serializer.data)
-    except Exception as e:
+    except APIException as error:
+        raise DRFViewException(detail=error.detail, status_code=status.HTTP_400_BAD_REQUEST)
+
+    except Exception:
         logger.error(
             {
                 "message": "Couldn't get all users.",
@@ -189,11 +241,27 @@ def get_groups(user_id: int, offset: int = 0, limit: int = 20, **kwargs) -> list
                 inboxmember__user_id=user_id,
                 is_group=True,
             )
-            .only("id", "group_name")
+            .only("id", "inbox_name")
             .order_by("-last_message_timestamp")[offset : offset + limit]
         )
 
         for group in groups_qs:
+            inbox_members = InboxMember.objects.filter(
+                inbox_id=group.id,
+            )
+            members = list()
+            for member in inbox_members:
+                members.append(
+                    {
+                        "user_id": member.user_id,
+                        "role": member.role,
+                        "is_blocked": member.is_blocked,
+                    }
+                )
+
+            group_data = group.__dict__
+            group_data["inbox_id"] = group_data.pop("id")
+            group_data["inbox_members"] = members
             serializer = GroupSerializer(data=group.__dict__)
             if not serializer.is_valid():
                 logger.error(
@@ -206,6 +274,8 @@ def get_groups(user_id: int, offset: int = 0, limit: int = 20, **kwargs) -> list
                     detail="Invalid data format, serializer validation failed.", status_code=status.HTTP_400_BAD_REQUEST
                 )
             groups.append(serializer.data)
+    except APIException as error:
+        raise DRFViewException(detail=error.detail, status_code=status.HTTP_400_BAD_REQUEST)
     except Exception:
         logger.error(
             {
@@ -252,12 +322,12 @@ def send_message(receiver_id: int, data: dict, **kwargs) -> bool:
         )
 
         last_message = serializer.validated_data.get("text", "")[:20]
-        if last_message:
+        if len(serializer.validated_data.get("text", "")) > 20:
             last_message += "..."
 
         if not inbox.exists():
             inbox = Inbox.objects.create(
-                group_name="",
+                inbox_name="",
                 is_group=False,
                 is_archived=False,
                 is_muted=False,
@@ -297,21 +367,46 @@ def send_message(receiver_id: int, data: dict, **kwargs) -> bool:
         )
 
         try:
+            # Inbox Event for the left side chatbox
             response = trigger_pusher(
-                channels=[f"user_{receiver_id}"],
+                channels=[f"inbox_{receiver_id}"],
+                event="inbox",
+                data={
+                    "inbox_id": inbox.first().id if isinstance(inbox, QuerySet) else inbox.id,
+                    "sender_id": serializer.validated_data.get("sender_id", 0),
+                    "message": last_message,
+                    "timestamp": serializer.validated_data.get("timestamp", current_timestamp),
+                },
+            )
+            if not response:
+                logger.info("Couldn't send inbox event. Received false response from pusher.")
+                return False
+            else:
+                logger.info(f"Inbox event sent successfully to channels: {[f'inbox_{receiver_id}']}.")
+
+            # Message Event for the conversations
+            response = trigger_pusher(
+                channels=[f"message_{receiver_id}"],
                 event="message",
                 data={
                     "inbox_id": inbox.first().id if isinstance(inbox, QuerySet) else inbox.id,
                     "message_id": message.id,
-                    "last_message": last_message,
-                    "timestamp": serializer.validated_data.get("timestamp", current_timestamp),
+                    "sender_id": serializer.validated_data.get("sender_id", 0),
+                    "text": serializer.validated_data.get("text", ""),
+                    "has_attachment": message.has_attachment,
+                    "attachments": [],
+                    "created_at": message.created_at.isoformat(),
+                    "updated_at": message.updated_at.isoformat(),
                 },
             )
-
-            print("Data: ", data)
             if not response:
-                logger.info("Couldn't send message. Received false response from pusher.")
+                logger.info("Couldn't send message event. Received false response from pusher.")
                 return False
+            else:
+                logger.info(f"Message event sent successfully to channels: {[f'message_{receiver_id}']}.")
+
+            message_status.is_sent = True
+            message_status.save()
         except Exception:
             logger.error(
                 {
@@ -322,6 +417,8 @@ def send_message(receiver_id: int, data: dict, **kwargs) -> bool:
             message_status.is_failed = True
             message_status.save()
             return False
+    except APIException as error:
+        raise DRFViewException(detail=error.detail, status_code=status.HTTP_400_BAD_REQUEST)
     except Exception:
         logger.error(
             {

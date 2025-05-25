@@ -6,7 +6,8 @@ from django.contrib.auth.models import User
 
 class Inbox(models.Model):
     id = models.AutoField(primary_key=True)
-    group_name = models.CharField(max_length=255)
+    inbox_name = models.CharField(max_length=255)
+    profile_photo = models.CharField(max_length=255, null=True, default=None)
     is_group = models.BooleanField(default=False)
     is_archived = models.BooleanField(default=False)
     is_muted = models.BooleanField(default=False)
