@@ -56,7 +56,6 @@ const Chat = () => {
     }
 
     const handleClick = async(state) => {
-        console.log(`Current State: ${currentState} and New State: ${state}`);
         if(currentState === state){
             return;
         }

@@ -1,7 +1,7 @@
 import './ChatList.css';
 import Friend from '../Friend/Friend'
 import {getPusherApp, subscribeChannel} from '../../externals/pusher';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import config from '../../externals/config';
 import { useNavigate } from 'react-router-dom';
 import handleHTTPRequest from '../../httpclient';
@@ -11,12 +11,22 @@ import User from '../User/User';
 
 const ChatList = (props) => {
     const navigate = useNavigate();
+    const inboxIdRef = useRef(props.inboxId);
 
     const updateFriend = (data) => {
         console.log("Data received via pusher: ", data);
         props.setFriendList(prevFriends => {
+
+            if (prevFriends.some(f =>
+                f.inbox_id === data.inbox_id &&
+                f.last_message_timestamp === data.timestamp
+            )) {
+                console.log("Duplicate message detected - skipping");
+                return prevFriends;
+            }
+
             // 1. Find the index of the friend to update
-            const friendIndex = prevFriends.findIndex(f => f.inbox_id === data.inbox_id);
+            const friendIndex = prevFriends.findIndex(f => f.inbox_id === data.inbox_id && f.last_message !== data.message);
 
             // If friend not found, return unchanged
             if (friendIndex === -1) return prevFriends;
@@ -24,6 +34,7 @@ const ChatList = (props) => {
             // 2. Create updated friend object (immutable update)
             const updatedFriend = {
               ...prevFriends[friendIndex],
+              unseen_count: ( inboxIdRef.current === data.inbox_id ? 0 : prevFriends[friendIndex].unseen_count + 1),
               last_message: data.message,
               last_message_timestamp: data.timestamp,
               last_message_sender: data.sender_id
@@ -131,11 +142,15 @@ const ChatList = (props) => {
             console.log("Couldn't subscribe to channel.");
             return;
         }
-        const handler = (data) => {
+        channel.bind('inbox', (data) => {
             updateFriend(data);
-        }
-        channel.bind('inbox', handler);
+        });
     }, [props.currentState]);
+
+
+    useEffect(() => {
+        inboxIdRef.current = props.inboxId;
+    }, [props.inboxId]);
 
 
     return (
