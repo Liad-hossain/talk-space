@@ -1,3 +1,4 @@
+import React from 'react';
 import './Conversation.css';
 import MyContent from '../Content/MyContent';
 import FriendContent from '../Content/FriendContent';
@@ -10,24 +11,28 @@ import { useNavigate } from 'react-router-dom';
 import handleHTTPRequest from '../../httpclient';
 import { getPusherApp, subscribeChannel } from '../../externals/pusher';
 import EmojiPickerButton from '../../externals/EmojiPickerButton';
+import InfiniteScroll from 'react-infinite-scroll-component';
 
 
 const Conversation = (props) => {
     const [conversations, setConversations] = useState([]);
     const inboxIdRef = useRef(props.inboxId);
+    const [hasMore, setHasMore] = useState(true);
+    const scrollRef = useRef(null);
     const formRef = useRef(null);
     const navigate = useNavigate();
 
 
-    const getConversations = async(inbox_id) => {
+    const getConversations = async(inbox_id = inboxIdRef.current, is_pagination=true) => {
         if(!inbox_id){
             setConversations([]);
-            return [];
+            setHasMore(false);
+            return;
         }
-        const url = config.inbox.get_conversations(inbox_id)
+        const url = config.inbox.get_conversations(inbox_id);
         const params = {
-            offset: 0,
-            limit: 30,
+            offset: (is_pagination ? conversations.length : 0),
+            limit: 100,
         }
         const response = await handleHTTPRequest('GET', url, {}, params, null);
         if (response.status !== 200){
@@ -36,10 +41,20 @@ const Conversation = (props) => {
             navigate("/")
         }
         else{
-            setConversations(response.data.dataSource);
-            return response.data.dataSource;
+            if(!is_pagination){
+                setConversations(response.data.dataSource);
+                return;
+            }
+
+            if(response.data.dataSource.length === 0){
+                setHasMore(false);
+                return;
+            }
+            setConversations((prevItems) => [
+                ...prevItems,
+                ...response.data.dataSource,
+            ]);
         }
-        return [];
     }
 
     const getConversationComponents = (conversation_list) =>{
@@ -123,7 +138,7 @@ const Conversation = (props) => {
             }
 
             const newChat = {
-                "inbox_id": props.inboxId,
+                "inbox_id": inboxIdRef.current,
                 "sender_id": props.user_id,
                 "message": message.substring(0,20) + (message.length > 20 ? "..." : ""),
                 "timestamp": Math.floor(Date.now() / 1000),
@@ -131,7 +146,7 @@ const Conversation = (props) => {
             updateFriend(newChat);
 
             const newConversation = {
-                "inbox_id": props.inboxId,
+                "inbox_id": inboxIdRef.current,
                 "message_id": Math.floor(Date.now() / 1000),
                 "sender_id": props.user_id,
                 "receiver_id": data.receiver_id,
@@ -168,8 +183,14 @@ const Conversation = (props) => {
 
 
     useEffect(() => {
-        getConversations(props.inboxId);
         inboxIdRef.current = props.inboxId;
+        setHasMore(true);    //Need to set it before calling getConversations because if the conversations is empty then making it false again
+        getConversations(props.inboxId,false);
+
+        if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        }
+
         const pusher_app = getPusherApp();
         const channel = subscribeChannel(pusher_app, `message_${props.user_id}`);
         if(!channel){
@@ -193,8 +214,25 @@ const Conversation = (props) => {
                 <img src={ThreeDots} alt='Three Dots Icon' width={50} height={50} className='three-dots-icon'/>
             </div>
             <div className="conversation-bottom">
-                <div className='conversation-content'>
-                    {getConversationComponents(conversations)}
+                <div className='conversation-content' id="scrollableConversationContainer" ref={scrollRef}>
+                    <InfiniteScroll
+                        key={props.inboxId}
+                        dataLength={conversations.length}
+                        next={getConversations}
+                        hasMore={hasMore}
+                        loader={hasMore && <h4 style={{ position: 'absolute', left: '60%', top: '50%', zIndex: 10, padding: '10px 20px', borderRadius: '20px' }}>Loading...</h4>}
+                        inverse={true}
+                        scrollableTarget="scrollableConversationContainer"
+                        style={{
+                            display: 'flex',
+                            flexDirection: 'column-reverse', // Critical for reverse scroll
+                            overflowY: 'auto',
+                            height: '100%'
+                        }}
+                        className='conversation-scroll'
+                    >
+                        {getConversationComponents(conversations)}
+                    </InfiniteScroll>
                 </div>
                 <form ref={formRef} className="send-box" onKeyDown={handleKeyDown} onSubmit={handleSendMessage}>
                     <EmojiPickerButton onEmojiClick={handleEmojiSelect}/>
