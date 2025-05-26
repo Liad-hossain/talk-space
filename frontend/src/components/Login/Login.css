@@ -39,6 +39,48 @@
     color: #000;
 }
 
+.form-password{
+    width: 300px;
+    height: 40px;
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+
+.form-password input {
+    width: 100%;
+    padding: 0.5rem;
+    padding-right: 2.5rem;
+    border-radius: 5px;
+    border: 1px solid black;
+    padding: 10px;
+    font-size: 15px;
+    font-family: 'Poppins';
+    outline-color: var(--home-font-color);
+    color: #000;
+}
+
+.password-toggle{
+    position: absolute;
+    right: 10px;
+    top: 60%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #666;
+    padding: 0.25rem;
+}
+
+.password-toggle:hover {
+    color: #333;
+  }
+
+.password-toggle:focus {
+    outline: none;
+    color: #0066cc;
+  }
+
 .form-button{
     width: 100px;
     height: 35px;
@@ -51,6 +93,14 @@
     border: none;
     cursor: pointer;
 }
+
+
+
+.form-button{
+    width: 100px;
+    height: 35px;
+}
+
 
 .form-button:hover{
     background-color: aquamarine;

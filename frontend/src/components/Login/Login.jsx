@@ -5,10 +5,13 @@ import {useNavigate} from 'react-router-dom';
 import axios from 'axios';
 import config from '../../externals/config';
 import { toast } from 'react-toastify';
+import { FaEye, FaEyeSlash } from 'react-icons/fa'; // Using react-icons
+import { useState } from 'react';
 
 
 const Login = (props) => {
     const navigate = useNavigate();
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleLogin = async(e) => {
         e.preventDefault();
@@ -37,13 +40,27 @@ const Login = (props) => {
         }
     }
 
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
+    };
+
     return (
         <div className='login'>
             <img src={talkspace_logo} alt="My LOGO" width={150} height={150}/>
             <h2>Sign in to your account</h2>
             <form className='login-form' onSubmit={handleLogin}>
                 <input type='username' placeholder='Username' className='form-input' required/>
-                <input type='password' placeholder='Password' className='form-input' required/>
+                <div className='form-password' >
+                    <input type={showPassword ? "text" : "password"} placeholder='Password' className='password-input-container' required/>
+                    <button
+                        type="button"
+                        className="password-toggle"
+                        onClick={togglePasswordVisibility}
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                        {!showPassword ? <FaEyeSlash /> : <FaEye />}
+                    </button>
+                </div>
                 <button type='submit' className='form-button'>Sign In</button>
             </form>
             <p>Don't have an account? <span onClick={()=>props.setUserState(userStates.REGISTER)}>Sign up here</span></p>

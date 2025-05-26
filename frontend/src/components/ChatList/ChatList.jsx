@@ -1,17 +1,21 @@
 import './ChatList.css';
 import Friend from '../Friend/Friend'
 import {getPusherApp, subscribeChannel} from '../../externals/pusher';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import config from '../../externals/config';
 import { useNavigate } from 'react-router-dom';
 import handleHTTPRequest from '../../httpclient';
 import { selectedStates } from '../../const';
 import User from '../User/User';
+import InfiniteScroll from 'react-infinite-scroll-component';
+
 
 
 const ChatList = (props) => {
     const navigate = useNavigate();
     const inboxIdRef = useRef(props.inboxId);
+    const [hasMore, setHasMore] = useState(true);
+    const scrollRef = useRef(null);
 
     const updateFriend = (data) => {
         console.log("Data received via pusher: ", data);
@@ -63,12 +67,12 @@ const ChatList = (props) => {
     };
 
 
-    const getFriends = async(offset=0, limit=30) => {
+    const getFriends = async(is_pagination=true) => {
         props.setInboxId(null);
         const url = config.inbox.get_chats(props.user_id);
         let params = {
-            offset: offset,
-            limit: limit,
+            offset: (is_pagination ? props.friendList.length : 0),
+            limit: 100,
         }
         const response  = await handleHTTPRequest('GET', url, {}, params, null);
         if (response.status !== 200){
@@ -78,7 +82,19 @@ const ChatList = (props) => {
         }
         else{
             props.setUserList([]);
-            props.setFriendList(response.data.dataSource);
+            if (!is_pagination){
+                props.setFriendList(response.data.dataSource);
+                return;
+            }
+
+            if(response.data.dataSource.length === 0){
+                setHasMore(false);
+                return;
+            }
+            props.setFriendList((prevItems) => [
+                ...prevItems,
+                ...response.data.dataSource,
+            ]);
         }
     }
 
@@ -90,12 +106,12 @@ const ChatList = (props) => {
     }
 
 
-    const getUsers = async(offset=0, limit=30) => {
+    const getUsers = async(is_pagination=true) => {
         props.setInboxId(null);
         let url= ""
         let params = {
-            offset: offset,
-            limit: limit,
+            offset: (is_pagination ? props.userList.length : 0),
+            limit: 100,
         }
         if (props.currentState === selectedStates.GROUPS){
             url = config.inbox.get_groups(props.user_id);
@@ -117,7 +133,19 @@ const ChatList = (props) => {
         }
         else{
             props.setFriendList([]);
-            props.setUserList(response.data.dataSource);
+            if (!is_pagination){
+                props.setUserList(response.data.dataSource);
+                return;
+            }
+
+            if(response.data.dataSource.length === 0){
+                setHasMore(false);
+                return;
+            }
+            props.setUserList((prevItems) => [
+                ...prevItems,
+                ...response.data.dataSource,
+            ]);
         }
     }
 
@@ -130,10 +158,15 @@ const ChatList = (props) => {
 
 
     useEffect(() => {
+        setHasMore(true);
         if(props.currentState === selectedStates.CHATS){
-            getFriends();
+            getFriends(false);
         }else{
-            getUsers();
+            getUsers(false);
+        }
+
+        if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
 
         const pusher_app = getPusherApp();
@@ -154,8 +187,25 @@ const ChatList = (props) => {
 
 
     return (
-        <div className='chat-list' key="chat-list">
-            {props.currentState === selectedStates.CHATS ? getFriendsComponent() : getUsersComponent()}
+        <div className='chat-list' key="chat-list" id="scrollableChatContainer" ref={scrollRef}>
+            <InfiniteScroll
+                key={props.inboxId}
+                dataLength={props.currentState === selectedStates.CHATS ? props.friendList.length : props.userList.length}
+                next={props.currentState === selectedStates.CHATS ? getFriends : getUsers}
+                hasMore={hasMore}
+                loader={hasMore && <h4 style={{ position: 'absolute', left: '60%', top: '50%', zIndex: 10, padding: '10px 20px', borderRadius: '20px' }}>Loading...</h4>}
+                inverse={true}
+                scrollableTarget="scrollableChatContainer"
+                style={{
+                    display: 'flex',
+                    flexDirection: 'column-reverse', // Critical for reverse scroll
+                    overflowY: 'auto',
+                    height: '100%'
+                }}
+                className='conversation-scroll'
+            >
+                {props.currentState === selectedStates.CHATS ? getFriendsComponent() : getUsersComponent()}
+            </InfiniteScroll>
         </div>
     );
 };

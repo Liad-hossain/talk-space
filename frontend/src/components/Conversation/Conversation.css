@@ -46,7 +46,7 @@
 }
 
 .conversation-bottom {
-  background-color: #ffffff;
+  background-color: var(--conversation-bg-color);
   border-top-left-radius: 60px;
   border-top-right-radius: 60px;
   height: 90vh;
@@ -55,11 +55,14 @@
 .conversation-content {
   display: flex;
   flex-direction: column-reverse;
-  gap: 10px;
   padding: 20px 45px;
   height: 75vh;
   overflow-y: auto;
   scrollbar-width: none;
+}
+
+.conversation-scroll{
+  gap: 10px;
 }
 
 .send-box {

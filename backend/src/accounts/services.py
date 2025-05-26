@@ -13,7 +13,7 @@ def register(body: dict) -> dict:
     logger.info("Starting registration process....")
     serializer = RegisterSerializer(data=body)
     if not serializer.is_valid():
-        message = f"Could not validate the data provided by the user for registration."
+        message = f"Invalid Registration Form provided."
         logger.error(msg={"message": message, "error": serializer.errors})
         raise DRFViewException(detail=message, status_code=status.HTTP_400_BAD_REQUEST)
 
