@@ -9,8 +9,6 @@ class Inbox(models.Model):
     inbox_name = models.CharField(max_length=255)
     profile_photo = models.CharField(max_length=255, null=True, default=None)
     is_group = models.BooleanField(default=False)
-    is_archived = models.BooleanField(default=False)
-    is_muted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.IntegerField(null=True, default=None)
     last_message = models.TextField(null=False, default="")
@@ -31,7 +29,9 @@ class InboxMember(models.Model):
         ("user", "user"),
     ]
     role = models.CharField(max_length=255, choices=ROLE_CHOICES, default="user")
-    is_blocked = models.BooleanField(default=False)
+    is_blocked = models.BooleanField(default=False)  # Is this member is blocked or not
+    is_archived = models.BooleanField(default=False)  # Is this member archived the inbox or not
+    is_muted = models.BooleanField(default=False)  # Is this member muted the inbox or not
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
