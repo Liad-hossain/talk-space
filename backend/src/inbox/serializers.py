@@ -19,8 +19,6 @@ class ChatSerializer(serializers.Serializer):
     inbox_name = serializers.CharField(max_length=255, allow_blank=True, allow_null=True, default="")
     is_group = serializers.BooleanField(default=False)
     inbox_members = serializers.ListField(child=serializers.DictField(), required=True)
-    is_archived = serializers.BooleanField(default=False)
-    is_muted = serializers.BooleanField(default=False)
     last_message = serializers.CharField(max_length=255, default="")
     last_message_timestamp = serializers.IntegerField(required=True)
     last_message_sender = serializers.IntegerField(required=True)

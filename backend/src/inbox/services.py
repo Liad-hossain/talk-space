@@ -7,7 +7,7 @@ from helpers.custom_exception import DRFViewException, convert_exception_string_
 from rest_framework import status
 from django.db.models import Q, F, Count, OuterRef, Subquery, IntegerField, QuerySet
 from externals.pusher import trigger_pusher
-from helpers.const import UserStatus
+from helpers.const import UserStatus, InboxEvents
 from datetime import datetime, timezone
 from rest_framework.exceptions import APIException
 
@@ -51,6 +51,8 @@ def get_chats(user_id: int, offset: int = 0, limit: int = 20, **kwargs) -> list[
                         "user_id": member.user_id,
                         "role": member.role,
                         "is_blocked": member.is_blocked,
+                        "is_archived": member.is_archived,
+                        "is_muted": member.is_muted,
                     }
                 )
                 if member.user_id != user_id:
@@ -429,4 +431,68 @@ def send_message(receiver_id: int, data: dict, **kwargs) -> bool:
         raise DRFViewException(detail="Couldn't send message.", status_code=status.HTTP_400_BAD_REQUEST)
 
     logger.info("Ending send message process....")
+    return True
+
+
+def handle_inbox_event(inbox_id: int, body: dict, **kwargs) -> bool:
+    logger.info("Starting handle inbox event process....")
+    try:
+        event = body.get("event", "")
+        if event == InboxEvents.SEEN:
+            user_id = body.get("user_id", 0)
+            if not user_id:
+                raise DRFViewException(detail="User id is required.", status_code=status.HTTP_400_BAD_REQUEST)
+            MessageStatus.objects.filter(
+                message__inbox_id=inbox_id, user_id=user_id, message__created_at__lte=datetime.now(timezone.utc)
+            ).update(is_seen=True)
+
+        elif event == InboxEvents.DELETE:
+            message_id = body.get("message_id", 0)
+            if message_id:
+                Message.objects.filter(id=message_id).update(is_deleted=True)
+            else:
+                Message.objects.filter(
+                    inbox_id=inbox_id, is_deleted=False, created_at__lte=datetime.now(timezone.utc)
+                ).update(is_deleted=True)
+
+        elif event == InboxEvents.ARCHIVE:
+            user_id = body.get("user_id", 0)
+            if not user_id:
+                raise DRFViewException(detail="User id is required.", status_code=status.HTTP_400_BAD_REQUEST)
+            InboxMember.objects.filter(inbox_id=inbox_id, user_id=user_id).update(is_archived=True)
+
+        elif event == InboxEvents.UNARCHIVE:
+            user_id = body.get("user_id", 0)
+            if not user_id:
+                raise DRFViewException(detail="User id is required.", status_code=status.HTTP_400_BAD_REQUEST)
+            InboxMember.objects.filter(inbox_id=inbox_id, user_id=user_id).update(is_archived=False)
+
+        elif event == InboxEvents.MUTE:
+            user_id = body.get("user_id", 0)
+            if not user_id:
+                raise DRFViewException(detail="User id is required.", status_code=status.HTTP_400_BAD_REQUEST)
+            InboxMember.objects.filter(inbox_id=inbox_id, user_id=user_id).update(is_muted=True)
+
+        elif event == InboxEvents.UNMUTE:
+            user_id = body.get("user_id", 0)
+            if not user_id:
+                raise DRFViewException(detail="User id is required.", status_code=status.HTTP_400_BAD_REQUEST)
+            InboxMember.objects.filter(inbox_id=inbox_id, user_id=user_id).update(is_muted=False)
+
+        else:
+            raise DRFViewException(detail="Invalid event.", status_code=status.HTTP_400_BAD_REQUEST)
+
+    except APIException as error:
+        raise DRFViewException(detail=error.detail, status_code=status.HTTP_400_BAD_REQUEST)
+
+    except Exception:
+        logger.error(
+            {
+                "message": "Couldn't handle receive event.",
+                "error": convert_exception_string_to_one_line(traceback.format_exc()),
+            }
+        )
+        return False
+
+    logger.info("Ending handle inbox event process....")
     return True
