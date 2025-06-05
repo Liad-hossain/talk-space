@@ -14,16 +14,41 @@ const User = (props) => {
 
         const body = {
             event: "seen",
-            user_id: props.user_id,
+            data: {
+                user_id: props.user_id,
+            }
         }
         await handleHTTPRequest('POST', config.inbox.send_inbox_event(props.inbox_id), {}, null, body);
 
     }
 
+    const get_last_active_time = () => {
+        const pastTime = new Date(props.last_active_time);
+        const currentTime = new Date();
+
+        // Calculate difference in milliseconds and convert to seconds
+        const secondsAgo = Math.floor((currentTime - pastTime) / 1000);
+
+        if(secondsAgo < 60){
+            return secondsAgo + "s";
+        }
+        else if(secondsAgo >=60 && secondsAgo < 3600){
+            return Math.floor(secondsAgo / 60) + "m";
+        }
+        else if(secondsAgo >=3600 && secondsAgo < 86400){
+            return Math.floor(secondsAgo / 3600) + "h";
+        }
+        return null
+    }
+
+
     const myId = props.inbox_id || props.id;
     return (
         <div className='user-selected' key={myId} onClick={handleUserClick} style={{backgroundColor: myId === props.selectedId ? "var(--clicked-chatbox-color)" : undefined}}>
-            <img src={ProfileIcon} alt="My Profile" width={50} height={50} className='inbox-profile'/>
+            <div className="inbox-profile-container">
+                <img src={ProfileIcon} alt="My Profile" width={50} height={50} className='inbox-profile'/>
+                {props.is_active ? <div className="active-status"></div> : (get_last_active_time() != null) && <div className="inactive-status">{get_last_active_time()}</div>}
+            </div>
             <span className='inbox-name'>{props.inbox_name || props.username}</span>
         </div>
     );

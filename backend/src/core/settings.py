@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "accounts",
     "blacklist",
     "inbox",
+    "externals",
 ]
 
 MIDDLEWARE = [
@@ -125,6 +126,12 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
+
+
+GLOBAL_REDIS_HOST = config("GLOBAL_REDIS_HOST", default="localhost")
+GLOBAL_REDIS_PORT = config("GLOBAL_REDIS_PORT", default="6379")
+GLOBAL_REDIS_PASSWORD = config("GLOBAL_REDIS_PASSWORD", default=None)
+GLOBAL_REDIS_DB = config("GLOBAL_REDIS_DB", default="0")
 
 
 # Internationalization

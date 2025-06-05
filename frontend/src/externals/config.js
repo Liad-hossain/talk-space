@@ -13,7 +13,7 @@ const config = {
         get_users: (user_id) => `${TALKSPACE_BACKEND_BASE_URL}/api/inbox/${user_id}/users`,
         get_groups: (user_id) => `${TALKSPACE_BACKEND_BASE_URL}/api/inbox/${user_id}/groups`,
         send_message: (receiver_id) => `${TALKSPACE_BACKEND_BASE_URL}/api/inbox/${receiver_id}/send-message`,
-        send_inbox_event: (inbox_id) => `${TALKSPACE_BACKEND_BASE_URL}/api/inbox/${inbox_id}/event`,
+        send_inbox_event: (inbox_id) => `${TALKSPACE_BACKEND_BASE_URL}/api/inbox/${inbox_id}/publish-event`,
     }
 }
 

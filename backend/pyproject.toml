@@ -22,6 +22,8 @@ pre-commit = "^4.2.0"
 django-cors-headers = "^4.7.0"
 pusher = "^3.3.3"
 drf-spectacular = "^0.28.0"
+django-redis = "^5.4.0"
+taskiq-redis = "^1.0.8"
 
 
 [build-system]

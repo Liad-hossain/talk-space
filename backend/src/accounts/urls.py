@@ -10,4 +10,5 @@ urlpatterns = [
     path("login", view=views.login_view, name="login"),
     path("logout", view=views.logout_view, name="logout"),
     path("refresh", view=views.CustomTokenRefreshView.as_view(), name="refresh"),
+    path("publish-event", view=views.publish_user_event_view, name="publish_user_event"),
 ]

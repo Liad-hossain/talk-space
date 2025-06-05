@@ -5,3 +5,7 @@
   padding: 20px;
   background: var(--chat-left-bg-color);
 }
+
+.chatlist-scroll{
+  gap: 10px;
+}

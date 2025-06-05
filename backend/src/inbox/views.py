@@ -4,7 +4,9 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from .serializers import QueryParamSerializer
-from .services import get_chats, get_conversations, get_users, get_groups, send_message, handle_inbox_event
+from .services import get_chats, get_conversations, get_users, get_groups, send_message
+from externals.redis_utils import publish_message_to_channel
+from helpers.const import RedisChannelNames
 
 
 logger = logging.getLogger("stdout")
@@ -68,9 +70,14 @@ def send_message_view(request: Request, *args, **kwargs) -> Response:
 
 @api_view(["POST"])
 @permission_classes((IsAuthenticated,))
-def handle_inbox_event_view(request: Request, *args, **kwargs):
-    logger.info("Entered handle inbox event view.")
+def publish_inbox_event_view(request: Request, *args, **kwargs):
+    logger.info("Entered publish inbox event view.")
     body = request.data
-    return Response(
-        data={"success": handle_inbox_event(inbox_id=kwargs.pop("inbox_id", 0), body=body, **kwargs)}, status=200
-    )
+    if body.get("data"):
+        body["data"]["inbox_id"] = kwargs.get("inbox_id", 0)
+
+    is_success = publish_message_to_channel(channel_name=RedisChannelNames.INBOX_EVENT, message=body)
+    if is_success:
+        logger.info("Inbox event published successfully.")
+
+    return Response(data={"success": is_success}, status=200)

@@ -46,7 +46,7 @@ const Conversation = (props) => {
                 return;
             }
 
-            if(response.data.dataSource.length === 0){
+            if(response.data.dataSource.length < 100){
                 setHasMore(false);
                 return;
             }

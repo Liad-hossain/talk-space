@@ -14,6 +14,8 @@ from django.utils.decorators import method_decorator
 from drf_spectacular.utils import extend_schema, inline_serializer
 
 from accounts.services import register, login, logout
+from externals.redis_utils import publish_message_to_channel
+from helpers.const import RedisChannelNames
 
 logger = logging.getLogger("stdout")
 
@@ -70,3 +72,14 @@ class CustomTokenRefreshView(TokenRefreshView):
     def post(self, request: Request, *args, **kwargs) -> Response:
         response = super().post(request, *args, **kwargs)
         return response
+
+
+@api_view(["POST"])
+@permission_classes((IsAuthenticated,))
+def publish_user_event_view(request: Request, *args, **kwargs) -> Response:
+    logger.info("Entered publish user event view.")
+    is_success = publish_message_to_channel(channel_name=RedisChannelNames.USER_EVENT, message=request.data)
+    if is_success:
+        logger.info("User event published successfully.")
+
+    return Response(data={"success": is_success}, status=200)

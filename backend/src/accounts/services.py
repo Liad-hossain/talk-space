@@ -5,6 +5,10 @@ from accounts.models import User, UserInfo
 from accounts.helpers import is_strong_password
 from helpers.custom_exception import DRFViewException
 from django.utils import timezone
+from helpers.const import UserEvents, RedisChannelNames
+from externals.redis_utils import publish_message_to_channel
+from datetime import datetime
+
 
 logger = logging.getLogger("stdout")
 
@@ -63,8 +67,13 @@ def login(body: dict) -> dict:
             error_code="invalid_password",
         )
 
-    user.userinfo.status = "active"
-    user.userinfo.save(update_fields=["status"])
+    publish_message_to_channel(
+        channel_name=RedisChannelNames.USER_EVENT,
+        message={
+            "event": UserEvents.LOGIN,
+            "data": {"user_id": user.id, "last_active_time": timezone.now().isoformat()},
+        },
+    )
     refresh = serializer.get_token(serializer.user)
     logger.info("Login process completed successfull!!!")
 
@@ -79,9 +88,73 @@ def login(body: dict) -> dict:
 def logout(user: User) -> dict:
     logger.info("Starting Logout process....")
 
-    user.userinfo.status = "inactive"
-    user.userinfo.last_active_time = timezone.now()
-    user.userinfo.save(update_fields=["status", "last_active_time"])
-
+    publish_message_to_channel(
+        channel_name=RedisChannelNames.USER_EVENT,
+        message={
+            "event": UserEvents.LOGOUT,
+            "data": {"user_id": user.id, "last_active_time": timezone.now().isoformat()},
+        },
+    )
     logger.info("Logout process completed successfull!!!")
+
     return "Logged out successfully."
+
+
+def connect_user(data: dict):
+    user_id = data.get("user_id", 0)
+    user = User.objects.filter(id=user_id)
+    last_active_time = data.get("last_active_time", "")
+    if user.exists() and last_active_time:
+        last_active_time = datetime.fromisoformat(last_active_time)
+        user = user.first()
+        user.userinfo.status = "active"
+        user.userinfo.save(update_fields=["status", "last_active_time"])
+        return True
+    return False
+
+
+def disconnect_user(data: dict):
+    user_id = data.get("user_id", 0)
+    last_active_time = data.get("last_active_time", "")
+    print("last_active_time: ", last_active_time)
+
+    user = User.objects.filter(id=user_id)
+    if user.exists() and last_active_time:
+        last_active_time = datetime.fromisoformat(last_active_time)
+        user = user.first()
+        user.userinfo.status = "inactive"
+        user.userinfo.last_active_time = last_active_time
+        user.userinfo.save(update_fields=["status", "last_active_time"])
+        return True
+    return False
+
+
+def process_user_heartbeat(data: dict):
+    user_id = data.get("user_id", 0)
+    user = User.objects.filter(id=user_id)
+    if user.exists():
+        user = user.first()
+        user.userinfo.last_active_time = timezone.now()
+        user.userinfo.save(update_fields=["last_active_time"])
+        return True
+    return False
+
+
+def process_user_event(message: dict):
+    logger.info("Receivend user event message: ", message)
+
+    event = message.get("event")
+    data = message.get("data", {})
+    is_success = False
+    if event == UserEvents.LOGIN:
+        is_success = connect_user(data)
+
+    elif event == UserEvents.LOGOUT:
+        is_success = disconnect_user(data)
+
+    elif event == UserEvents.HEARTBEAT:
+        is_success = process_user_heartbeat(data)
+
+    if is_success:
+        logger.info(f"User event process for event: {event} is completed successfully!!!")
+    return is_success

@@ -57,7 +57,6 @@ def get_chats(user_id: int, offset: int = 0, limit: int = 20, **kwargs) -> list[
                 )
                 if member.user_id != user_id:
                     receiver_id = member.user_id
-
             inbox_data = inbox.__dict__
             inbox_data["inbox_id"] = inbox_data.pop("id")
             inbox_data["inbox_members"] = members
@@ -67,6 +66,8 @@ def get_chats(user_id: int, offset: int = 0, limit: int = 20, **kwargs) -> list[
                 user = User.objects.filter(id=receiver_id).only("id", "username").first()
                 if user:
                     inbox_data["inbox_name"] = user.username
+                    inbox_data["is_active"] = user.userinfo.status == UserStatus.ACTIVE
+                    inbox_data["last_active_time"] = user.userinfo.last_active_time
             serializer = ChatSerializer(data=inbox_data)
             if not serializer.is_valid():
                 logger.error(
@@ -165,8 +166,9 @@ def get_users(user_id: int, is_active: bool | None = None, offset: int = 0, limi
             .annotate(
                 profile_photo=F("userinfo__profile_photo"),
                 status=F("userinfo__status"),
+                last_active_time=F("userinfo__last_active_time"),
             )
-            .values("id", "username", "profile_photo", "status")
+            .values("id", "username", "profile_photo", "status", "last_active_time")
             .order_by("-userinfo__created_at")[offset : offset + limit]
         )
 
@@ -205,6 +207,7 @@ def get_users(user_id: int, is_active: bool | None = None, offset: int = 0, limi
 
             user["inbox_members"] = members
             user["inbox_id"] = inbox[0].id if inbox.exists() else 0
+            user["is_active"] = user["status"] == UserStatus.ACTIVE
             serializer = UserSerializer(data=user)
             if not serializer.is_valid():
                 logger.error(
@@ -434,56 +437,113 @@ def send_message(receiver_id: int, data: dict, **kwargs) -> bool:
     return True
 
 
-def handle_inbox_event(inbox_id: int, body: dict, **kwargs) -> bool:
-    logger.info("Starting handle inbox event process....")
+def process_seen_event(data: dict) -> bool:
+    user_id = data.get("user_id", 0)
+    inbox_id = data.get("inbox_id", 0)
+    if not user_id:
+        logger.info(f"User id is required for seen event.")
+        return False
+    MessageStatus.objects.filter(
+        message__inbox_id=inbox_id, user_id=user_id, is_seen=False, message__created_at__lte=datetime.now(timezone.utc)
+    ).update(is_seen=True)
+
+    logger.info("Successfully processed seen event!!")
+    return True
+
+
+def process_delete_event(data: dict) -> bool:
+    message_id = data.get("message_id", 0)
+    inbox_id = data.get("inbox_id", 0)
+    if message_id:
+        Message.objects.filter(id=message_id).update(is_deleted=True)
+    else:
+        Message.objects.filter(inbox_id=inbox_id, is_deleted=False, created_at__lte=datetime.now(timezone.utc)).update(
+            is_deleted=True
+        )
+
+    logger.info("Successfully processed delete event!!")
+    return True
+
+
+def process_archive_event(data: dict) -> bool:
+    user_id = data.get("user_id", 0)
+    inbox_id = data.get("inbox_id", 0)
+    if not user_id:
+        logger.info(f"User Id is required for archive event.")
+        return False
+    InboxMember.objects.filter(inbox_id=inbox_id, user_id=user_id).update(is_archived=True)
+
+    logger.info("Successfully processed archive event!!")
+    return True
+
+
+def process_unarchive_event(data: dict) -> bool:
+    user_id = data.get("user_id", 0)
+    inbox_id = data.get("inbox_id", 0)
+    if not user_id:
+        logger.info(f"User Id is required for unarchive event.")
+        return False
+    InboxMember.objects.filter(inbox_id=inbox_id, user_id=user_id).update(is_archived=False)
+
+    logger.info("Successfully processed unarchive event!!")
+    return True
+
+
+def process_mute_event(data: dict) -> bool:
+    user_id = data.get("user_id", 0)
+    inbox_id = data.get("inbox_id", 0)
+    if not user_id:
+        logger.info(f"User Id is required for mute event.")
+        return False
+    InboxMember.objects.filter(inbox_id=inbox_id, user_id=user_id).update(is_muted=True)
+
+    logger.info("Successfully processed mute event!!")
+    return True
+
+
+def process_unmute_event(data: dict) -> bool:
+    user_id = data.get("user_id", 0)
+    inbox_id = data.get("inbox_id", 0)
+    if not user_id:
+        logger.info(f"User Id is required for unmute event.")
+        return False
+    InboxMember.objects.filter(inbox_id=inbox_id, user_id=user_id).update(is_muted=False)
+
+    logger.info("Successfully processed unmute event!!")
+    return True
+
+
+def process_inbox_event(data: dict) -> bool:
+    logger.info(f"Starting inbox event process using data: {data} ....")
     try:
-        event = body.get("event", "")
+        event = data.get("event", "")
+        data = data.get("data", {})
+        if not data.get("inbox_id", 0):
+            logger.info("Inbox id is required for inbox event.")
+            return False
+
+        is_success = False
         if event == InboxEvents.SEEN:
-            user_id = body.get("user_id", 0)
-            if not user_id:
-                raise DRFViewException(detail="User id is required.", status_code=status.HTTP_400_BAD_REQUEST)
-            MessageStatus.objects.filter(
-                message__inbox_id=inbox_id, user_id=user_id, message__created_at__lte=datetime.now(timezone.utc)
-            ).update(is_seen=True)
+            is_success = process_seen_event(data)
 
         elif event == InboxEvents.DELETE:
-            message_id = body.get("message_id", 0)
-            if message_id:
-                Message.objects.filter(id=message_id).update(is_deleted=True)
-            else:
-                Message.objects.filter(
-                    inbox_id=inbox_id, is_deleted=False, created_at__lte=datetime.now(timezone.utc)
-                ).update(is_deleted=True)
+            is_success = process_delete_event(data)
 
         elif event == InboxEvents.ARCHIVE:
-            user_id = body.get("user_id", 0)
-            if not user_id:
-                raise DRFViewException(detail="User id is required.", status_code=status.HTTP_400_BAD_REQUEST)
-            InboxMember.objects.filter(inbox_id=inbox_id, user_id=user_id).update(is_archived=True)
+            is_success = process_archive_event(data)
 
         elif event == InboxEvents.UNARCHIVE:
-            user_id = body.get("user_id", 0)
-            if not user_id:
-                raise DRFViewException(detail="User id is required.", status_code=status.HTTP_400_BAD_REQUEST)
-            InboxMember.objects.filter(inbox_id=inbox_id, user_id=user_id).update(is_archived=False)
+            is_success = process_unarchive_event(data)
 
         elif event == InboxEvents.MUTE:
-            user_id = body.get("user_id", 0)
-            if not user_id:
-                raise DRFViewException(detail="User id is required.", status_code=status.HTTP_400_BAD_REQUEST)
-            InboxMember.objects.filter(inbox_id=inbox_id, user_id=user_id).update(is_muted=True)
+            is_success = process_mute_event(data)
 
         elif event == InboxEvents.UNMUTE:
-            user_id = body.get("user_id", 0)
-            if not user_id:
-                raise DRFViewException(detail="User id is required.", status_code=status.HTTP_400_BAD_REQUEST)
-            InboxMember.objects.filter(inbox_id=inbox_id, user_id=user_id).update(is_muted=False)
+            is_success = process_unmute_event(data)
 
         else:
-            raise DRFViewException(detail="Invalid event.", status_code=status.HTTP_400_BAD_REQUEST)
-
-    except APIException as error:
-        raise DRFViewException(detail=error.detail, status_code=status.HTTP_400_BAD_REQUEST)
+            logger.info("Invalid event: ", event)
+            return False
 
     except Exception:
         logger.error(
@@ -494,5 +554,5 @@ def handle_inbox_event(inbox_id: int, body: dict, **kwargs) -> bool:
         )
         return False
 
-    logger.info("Ending handle inbox event process....")
-    return True
+    logger.info("Ending inbox event process....")
+    return is_success

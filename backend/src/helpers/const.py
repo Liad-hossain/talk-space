@@ -13,3 +13,14 @@ class InboxEvents:
     UNMUTE = "unmute"
     ARCHIVE = "archive"
     UNARCHIVE = "unarchive"
+
+
+class UserEvents:
+    LOGIN = "login"
+    LOGOUT = "logout"
+    HEARTBEAT = "heartbeat"
+
+
+class RedisChannelNames:
+    INBOX_EVENT = "inbox_event"
+    USER_EVENT = "user_event"

@@ -23,6 +23,8 @@ class ChatSerializer(serializers.Serializer):
     last_message_timestamp = serializers.IntegerField(required=True)
     last_message_sender = serializers.IntegerField(required=True)
     unseen_count = serializers.IntegerField(default=0)
+    is_active = serializers.BooleanField(default=False)
+    last_active_time = serializers.DateTimeField(required=False, allow_null=True, default=None)
 
 
 class ConversationSerializer(serializers.Serializer):
@@ -42,6 +44,8 @@ class UserSerializer(serializers.Serializer):
     profile_photo = serializers.CharField(required=False, allow_null=True, max_length=255)
     status = serializers.CharField(required=True, max_length=255)
     inbox_members = serializers.ListField(child=serializers.DictField(), required=True)
+    is_active = serializers.BooleanField(default=False)
+    last_active_time = serializers.DateTimeField(required=False, allow_null=True, default=None)
 
 
 class GroupSerializer(serializers.Serializer):
