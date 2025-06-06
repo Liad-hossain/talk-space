@@ -23,6 +23,8 @@ const Chat = () => {
     const [selectedId, setSelectedId] = useState(null);
     const [friendList, setFriendList] = useState([]);
     const [userList, setUserList] = useState([]);
+    const [searchText, setSearchText] = useState("");
+
 
     const location = useLocation();
     const navigate = useNavigate();
@@ -64,6 +66,10 @@ const Chat = () => {
         setCurrentState(state);
     }
 
+    const handleSearchChange = (e) => {
+        setSearchText(e.target.value);
+    }
+
     const args = {
         inboxId:inboxId,
         setInboxId: setInboxId,
@@ -79,6 +85,7 @@ const Chat = () => {
         setFriendList: setFriendList,
         userList: userList,
         setUserList: setUserList,
+        searchText: searchText,
     }
 
     return (
@@ -93,7 +100,7 @@ const Chat = () => {
                     </div>
                     <div className='search'>
                         <img src={SearchIcon} alt="Search LOGO" width={30} height={30} className='search-icon'/>
-                        <input type='search' placeholder='Search' className='user-search'/>
+                        <input type='search' placeholder='Search' className='user-search' value={searchText} onChange={handleSearchChange}/>
                     </div>
                     <div className="filter-user">
                         <span onClick={() => handleClick(selectedStates.ALL_USERS)} style={{textDecoration: currentState === selectedStates.ALL_USERS ? "underline" : undefined, ...(currentState === selectedStates.ALL_USERS && {textDecorationThickness: "2px",textUnderlineOffset: "4px"})}}>All Users</span>

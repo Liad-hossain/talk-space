@@ -5,6 +5,7 @@ class QueryParamSerializer(serializers.Serializer):
     offset = serializers.IntegerField(required=False, allow_null=True, default=0)
     limit = serializers.IntegerField(required=False, allow_null=True, default=10)
     is_active = serializers.BooleanField(required=False, allow_null=True, default=None)
+    search = serializers.CharField(required=False, allow_null=True, default=None)
 
 
 class MessageSerializer(serializers.Serializer):

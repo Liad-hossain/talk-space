@@ -16,6 +16,7 @@ const ChatList = (props) => {
     const inboxIdRef = useRef(props.inboxId);
     const friendLengthRef = useRef(0);
     const userLengthRef = useRef(0);
+    const searchTextRef = useRef(props.searchText);
     const [hasMore, setHasMore] = useState(true);
     const scrollRef = useRef(null);
 
@@ -69,10 +70,13 @@ const ChatList = (props) => {
     };
 
 
-    const getFriends = async(is_pagination=true, limit=100) => {
-        props.setInboxId(null);
+    const getFriends = async(is_pagination=true, limit=100, setNull=true) => {
+        if(setNull){
+            props.setInboxId(null);
+        }
         const url = config.inbox.get_chats(props.user_id);
         let params = {
+            search: props.searchText? props.searchText : null,
             offset: (is_pagination ? props.friendList.length : 0),
             limit: limit,
         }
@@ -108,10 +112,13 @@ const ChatList = (props) => {
     }
 
 
-    const getUsers = async(is_pagination=true, limit=100) => {
-        props.setInboxId(null);
+    const getUsers = async(is_pagination=true, limit=100, setNull = true) => {
+        if(setNull){
+            props.setInboxId(null);
+        }
         let url= ""
         let params = {
+            search: props.searchText? props.searchText : null,
             offset: (is_pagination ? props.userList.length : 0),
             limit: limit,
         }
@@ -218,6 +225,16 @@ const ChatList = (props) => {
     useEffect(() => {
         userLengthRef.current = props.userList.length;
     }, [props.userList.length]);
+
+    useEffect(() => {
+        searchTextRef.current = props.searchText;
+        if(props.currentState === selectedStates.CHATS){
+            getFriends(false, 100, false);
+        }else{
+            getUsers(false, 100, false);
+        }
+
+    }, [props.searchText]);
 
 
     useEffect(() => {

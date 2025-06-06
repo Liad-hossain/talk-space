@@ -23,6 +23,7 @@ class InboxMember(models.Model):
     id = models.AutoField(primary_key=True)
     inbox = models.ForeignKey(Inbox, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    nickname = models.CharField(max_length=255, null=True, default=None)
 
     ROLE_CHOICES = [
         ("admin", "admin"),

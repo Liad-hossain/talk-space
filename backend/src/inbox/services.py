@@ -30,10 +30,12 @@ def get_chats(user_id: int, offset: int = 0, limit: int = 20, **kwargs) -> list[
             .values("unseen_count")
         )
 
+        query = Q(inboxmember__user_id=user_id)
+        search = kwargs.get("search", None)
+        if search:
+            query = query & Q(inboxmenber__nickname__icontains=search)
         inboxes = (
-            Inbox.objects.filter(
-                inboxmember__user_id=user_id,
-            )
+            Inbox.objects.filter(query)
             .annotate(unseen_count=Subquery(unseen_count, output_field=IntegerField()))
             .order_by("-last_message_timestamp")[offset : offset + limit]
         )
@@ -44,11 +46,13 @@ def get_chats(user_id: int, offset: int = 0, limit: int = 20, **kwargs) -> list[
             )
 
             receiver_id = None
+            receiver_nickname = None
             members = list()
             for member in inbox_members:
                 members.append(
                     {
                         "user_id": member.user_id,
+                        "nickname": member.nickname,
                         "role": member.role,
                         "is_blocked": member.is_blocked,
                         "is_archived": member.is_archived,
@@ -57,6 +61,7 @@ def get_chats(user_id: int, offset: int = 0, limit: int = 20, **kwargs) -> list[
                 )
                 if member.user_id != user_id:
                     receiver_id = member.user_id
+                    receiver_nickname = member.nickname
             inbox_data = inbox.__dict__
             inbox_data["inbox_id"] = inbox_data.pop("id")
             inbox_data["inbox_members"] = members
@@ -65,7 +70,7 @@ def get_chats(user_id: int, offset: int = 0, limit: int = 20, **kwargs) -> list[
             if not inbox.is_group and receiver_id:
                 user = User.objects.filter(id=receiver_id).only("id", "username").first()
                 if user:
-                    inbox_data["inbox_name"] = user.username
+                    inbox_data["inbox_name"] = receiver_nickname
                     inbox_data["is_active"] = user.userinfo.status == UserStatus.ACTIVE
                     inbox_data["last_active_time"] = user.userinfo.last_active_time
             serializer = ChatSerializer(data=inbox_data)
@@ -161,6 +166,10 @@ def get_users(user_id: int, is_active: bool | None = None, offset: int = 0, limi
             query &= Q(userinfo__status=UserStatus.ACTIVE)
         else:
             query &= Q(userinfo__status=UserStatus.INACTIVE)
+
+        search = kwargs.get("search", None)
+        if search:
+            query &= Q(username__icontains=search)
         users_qs = (
             User.objects.filter(query)
             .annotate(
@@ -241,11 +250,12 @@ def get_groups(user_id: int, offset: int = 0, limit: int = 20, **kwargs) -> list
     logger.info("Starting get groups process....")
     groups = list()
     try:
+        query = Q(inboxmember__user_id=user_id) & Q(is_group=True)
+        search = kwargs.get("search", None)
+        if search:
+            query &= Q(inbox_name__icontains=search)
         groups_qs = (
-            Inbox.objects.filter(
-                inboxmember__user_id=user_id,
-                is_group=True,
-            )
+            Inbox.objects.filter(query)
             .only("id", "inbox_name")
             .order_by("-last_message_timestamp")[offset : offset + limit]
         )
@@ -343,11 +353,13 @@ def send_message(receiver_id: int, data: dict, **kwargs) -> bool:
             InboxMember.objects.create(
                 inbox=inbox,
                 user_id=serializer.validated_data.get("sender_id", 0),
+                nickname=sender.username,
                 role="user",
             )
             InboxMember.objects.create(
                 inbox=inbox,
                 user_id=receiver_id,
+                nickname=receiver.username,
                 role="user",
             )
 
