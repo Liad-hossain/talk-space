@@ -54,6 +54,8 @@ const Chat = () => {
             }
         } catch (error) {
             toast.error("Error Response but logged out");
+            localStorage.clear();
+            navigate('/')
         }
     }
 
@@ -64,6 +66,7 @@ const Chat = () => {
         setSelectedId(null);
         setInboxId(null);
         setCurrentState(state);
+        setSearchText("");
     }
 
     const handleSearchChange = (e) => {

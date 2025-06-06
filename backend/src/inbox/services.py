@@ -33,7 +33,7 @@ def get_chats(user_id: int, offset: int = 0, limit: int = 20, **kwargs) -> list[
         query = Q(inboxmember__user_id=user_id)
         search = kwargs.get("search", None)
         if search:
-            query = query & Q(inboxmenber__nickname__icontains=search)
+            query = query & Q(inboxmember__nickname__icontains=search)
         inboxes = (
             Inbox.objects.filter(query)
             .annotate(unseen_count=Subquery(unseen_count, output_field=IntegerField()))
