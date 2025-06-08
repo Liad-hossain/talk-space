@@ -2,6 +2,7 @@ import React from 'react';
 import './Conversation.css';
 import MyContent from '../Content/MyContent';
 import FriendContent from '../Content/FriendContent';
+import DateContent from '../Content/DateContent';
 import Profile from '../../assets/icons/profile_avatar.svg';
 import SendIcon from '../../assets/icons/send_icon.svg';
 import ThreeDots from '../../assets/icons/three_dots.svg';
@@ -12,6 +13,7 @@ import handleHTTPRequest from '../../httpclient';
 import { getPusherApp, subscribeChannel } from '../../externals/pusher';
 import EmojiPickerButton from '../../externals/EmojiPickerButton';
 import InfiniteScroll from 'react-infinite-scroll-component';
+import { convertDatetimeToShowDate } from '../../utils';
 
 
 const Conversation = (props) => {
@@ -64,13 +66,26 @@ const Conversation = (props) => {
         if (!conversation_list || !Array.isArray(conversation_list)) {
             return null;
         }
-        return conversation_list.map((conversation) => {
+        let date=null;
+        let components = []
+        conversation_list.map((conversation) => {
+            let currentDate = convertDatetimeToShowDate(conversation.created_at);
+            if(date === null){
+                date=currentDate;
+            }else if(date!==currentDate){
+                components.push(<DateContent date={date} />)
+                date=currentDate;
+            }
+
             if(conversation.sender_id === props.user_id){
-                return <MyContent {...conversation} />
+                components.push(<MyContent {...conversation} />)
             }else{
-                return <FriendContent {...conversation} isGroup={props.isGroup}/>
+                components.push(<FriendContent {...conversation} isGroup={props.isGroup}/>)
             }
         })
+
+        components.push(<DateContent date={date} />);
+        return components;
     }
 
 

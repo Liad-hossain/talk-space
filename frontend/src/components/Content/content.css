@@ -134,3 +134,23 @@
     border: 2px solid white;
     box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
 }
+
+
+.date-content{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.date{
+    margin-top: 20px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    background: white;
+    padding: 3px 10px;
+    font-size: 15px;
+    font-family: 'Poppins';
+    font-weight: 400;
+    letter-spacing: 0.01rem;
+}
