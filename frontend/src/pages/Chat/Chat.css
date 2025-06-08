@@ -1,133 +1,167 @@
-@import '../../index.css';
+@import "../../index.css";
 
-
-.chat{
-    display: grid;
-    grid-template-columns: 1fr 2.5fr;
-    height: 100vh;
+.chat {
+  display: grid;
+  grid-template-columns: 1fr 2.5fr;
+  height: 100vh;
 }
 
-.chat-left{
-    display: grid;
-    grid-template-rows: 1fr 7fr;
-    overflow-y: scroll;
-    scrollbar-width: none;
-    background: var(--chat-left-bg-color);
+.chat-left {
+  display: grid;
+  grid-template-rows: 1fr 7fr;
+  overflow-y: scroll;
+  scrollbar-width: none;
+  background: var(--chat-left-bg-color);
 }
 
-.chat-left-top{
-    background: var(--chat-search-bg-color);
-    padding: 20px 25px;
-    margin: 0;
-    border-radius: 30px;
-    display: flex;
-    justify-content: space-evenly;
-    align-items: start;
-    flex-direction: column;
-    gap: 15px;
-    position: sticky;
-    top: 0;
+.chat-left-top {
+  background: var(--chat-search-bg-color);
+  padding: 20px 25px;
+  margin: 0;
+  border-radius: 30px;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: start;
+  flex-direction: column;
+  gap: 15px;
+  position: sticky;
+  top: 0;
+  z-index: 3;
 }
 
-.topmost{
-    display: grid;
-    grid-template-columns: auto auto auto auto;
-    grid-column-gap: 20px;
-    align-items: center;
+.topmost {
+  display: grid;
+  grid-template-columns: auto auto auto auto auto;
+  grid-column-gap: 20px;
+  align-items: center;
 }
 
-.profile-icon{
-    cursor: pointer;
-    width: 30px;
-    height: 30px;
-    justify-self: start;
-    border: 1px solid var(--white-font-color);
-    border-radius: 50%;
+.profile-icon {
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  justify-self: start;
+  border: 1px solid var(--white-font-color);
+  border-radius: 50%;
 }
 
-.username{
-    font-size: 15px;
-    font-family: 'Poppins';
-    font-weight: 500;
-    color: var(--white-font-color);
+.username {
+  font-size: 15px;
+  font-family: "Poppins";
+  font-weight: 500;
+  color: var(--white-font-color);
 }
 
-.chat-icon:hover{
-    box-shadow: 0 2px 0 var(--white-font-color);
-    cursor: pointer;
+.chat-icon:hover {
+  box-shadow: 0 2px 0 var(--white-font-color);
+  cursor: pointer;
 }
 
-.logout{
-    font-size: 15px;
-    font-family: 'Poppins';
-    font-weight: 500;
-    color: var(--white-font-color);
+.group-button:hover {
+  cursor: pointer;
 }
 
-.logout:hover{
-    cursor: pointer;
-    text-decoration: underline;
-    text-underline-offset: 5px;
-    text-decoration-thickness: 2px;
+.custom-tooltip-container {
+  position: relative;
+  display: inline-block;
 }
 
-.search{
-    background: var(--white-font-color);
-    border-radius: 30px;
-    width: 90%;
-    height:45px;
-    display: grid;
-    grid-template-columns: 0.8fr 9fr;
-    align-items: center;
-    padding-left: 10px;
+.custom-tooltip {
+  position: absolute;
+  bottom: 0%;
+  left: 110%;
+  background-color: #333;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  white-space: nowrap;
+  pointer-events: none;
+
+  /* Initial hidden state */
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease, width 0.3s ease, z-index 0.3s ease;
 }
 
-
-.user-search{
-    border: none;
-    outline: none;
-    height: 80%;
-    width: 95%;
-    font-size: 15px;
-    font-family: 'Poppins';
+.custom-tooltip-container:hover .custom-tooltip {
+  opacity: 1;
+  visibility: visible;
+  width: auto;
+  z-index: 3;
+  /* transform: translateX(0%) translateY(-8px); Slight upward movement */
 }
 
-.filter-user{
-    display: grid;
-    grid-template-columns: auto auto auto auto;
-    grid-column-gap: 20px;
-    align-items: center;
-    justify-content: center;
-    color: var(--white-font-color);
+.logout {
+  font-size: 15px;
+  font-family: "Poppins";
+  font-weight: 500;
+  color: var(--white-font-color);
 }
 
-.filter-user span{
-    font-size: 15px;
-    font-family: 'Poppins';
-    font-weight: 500;
+.logout:hover {
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 5px;
+  text-decoration-thickness: 2px;
 }
 
-.filter-user span:hover{
-    cursor: pointer;
-    text-decoration: underline;
-    text-underline-offset: 5px;
-    text-decoration-thickness: 2px;
+.search {
+  background: var(--white-font-color);
+  border-radius: 30px;
+  width: 90%;
+  height: 45px;
+  display: grid;
+  grid-template-columns: 0.8fr 9fr;
+  align-items: center;
+  padding-left: 10px;
 }
 
-.chat-left-bottom{
-    display: flex;
-    flex-direction: column;
+.user-search {
+  border: none;
+  outline: none;
+  height: 80%;
+  width: 95%;
+  font-size: 15px;
+  font-family: "Poppins";
 }
 
-.chat-right{
-    height: 100vh;
-    opacity: 0.90;
-    border-radius: 30px;
+.filter-user {
+  display: grid;
+  grid-template-columns: auto auto auto auto;
+  grid-column-gap: 20px;
+  align-items: center;
+  justify-content: center;
+  color: var(--white-font-color);
 }
 
-.default-chat-bg{
-    height: 100vh;
-    background: url('../../assets/icons/talkspace_logo.svg') no-repeat;
-    background-color: #42495c;
-    opacity: 0.9;
+.filter-user span {
+  font-size: 15px;
+  font-family: "Poppins";
+  font-weight: 500;
+}
+
+.filter-user span:hover {
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 5px;
+  text-decoration-thickness: 2px;
+}
+
+.chat-left-bottom {
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-right {
+  height: 100vh;
+  opacity: 0.9;
+  border-radius: 30px;
+}
+
+.default-chat-bg {
+  height: 100vh;
+  background: url("../../assets/icons/talkspace_logo.svg") no-repeat;
+  background-color: #42495c;
+  opacity: 0.9;
 }

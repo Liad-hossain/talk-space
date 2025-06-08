@@ -4,7 +4,15 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from .serializers import QueryParamSerializer
-from .services import get_chats, get_conversations, get_users, get_groups, send_message
+from .services import (
+    get_chats,
+    get_conversations,
+    get_users,
+    get_groups,
+    send_message,
+    create_group,
+    send_group_message,
+)
 from externals.redis_utils import publish_message_to_channel
 from helpers.const import RedisChannelNames
 
@@ -62,10 +70,26 @@ def get_groups_view(request: Request, *args, **kwargs) -> Response:
 
 @api_view(["POST"])
 @permission_classes((IsAuthenticated,))
+def create_group_view(request: Request, *args, **kwargs) -> Response:
+    logger.info("Entered create group view.")
+    is_success = create_group(user_id=kwargs.pop("user_id"), data=request.data, **kwargs)
+    return Response(data={"success": is_success}, status=200)
+
+
+@api_view(["POST"])
+@permission_classes((IsAuthenticated,))
 def send_message_view(request: Request, *args, **kwargs) -> Response:
     logger.info("Entered send message view.")
-    data = send_message(receiver_id=kwargs.get("receiver_id"), data=request.data)
-    return Response(data={"success": True, "dataSource": data}, status=200)
+    is_success = send_message(receiver_id=kwargs.get("receiver_id"), data=request.data)
+    return Response(data={"success": is_success}, status=200)
+
+
+@api_view(["POST"])
+@permission_classes((IsAuthenticated,))
+def send_group_message_view(request: Request, *args, **kwargs) -> Response:
+    logger.info("Entered send group message view.")
+    is_success = send_group_message(inbox_id=kwargs.pop("inbox_id"), data=request.data, **kwargs)
+    return Response(data={"success": is_success}, status=200)
 
 
 @api_view(["POST"])

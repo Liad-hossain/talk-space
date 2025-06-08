@@ -222,9 +222,11 @@ const ChatList = (props) => {
         friendLengthRef.current = props.friendList.length;
     }, [props.friendList.length]);
 
+
     useEffect(() => {
         userLengthRef.current = props.userList.length;
     }, [props.userList.length]);
+
 
     useEffect(() => {
         searchTextRef.current = props.searchText;
@@ -234,7 +236,7 @@ const ChatList = (props) => {
             getUsers(false, 100, false);
         }
 
-    }, [props.searchText]);
+    }, [props.debouncedSearchText]);
 
 
     useEffect(() => {
@@ -266,7 +268,7 @@ const ChatList = (props) => {
 
         return () => clearInterval(intervalId);
 
-    }, [props.currentState]);
+    }, [props.currentState, props.isCreateGroup]);
 
 
     return (

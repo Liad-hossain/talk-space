@@ -73,13 +73,15 @@
 .friend-name{
     font-size: 15px;
     font-family: 'Poppins';
-    font-weight: 600;
+    font-weight: 400;
+    letter-spacing: 0.05rem;
 }
 
 .friend-text{
     font-size: 15px;
     font-family: 'Poppins';
-    font-weight: 400;
+    font-weight: 300;
+    letter-spacing: 0.03rem;
 }
 
 .friend-history{
@@ -93,7 +95,7 @@
 .last-send-time{
     font-size: 15px;
     font-family: 'Poppins';
-    font-weight: 400;
+    font-weight: 300;
 }
 
 .friend-unread{

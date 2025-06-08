@@ -23,7 +23,7 @@ const Conversation = (props) => {
     const navigate = useNavigate();
 
 
-    const getConversations = async(inbox_id = inboxIdRef.current, is_pagination=true) => {
+    const getConversations = async(inbox_id = inboxIdRef.current, is_pagination=true, limit=100) => {
         if(!inbox_id){
             setConversations([]);
             setHasMore(false);
@@ -32,7 +32,7 @@ const Conversation = (props) => {
         const url = config.inbox.get_conversations(inbox_id);
         const params = {
             offset: (is_pagination ? conversations.length : 0),
-            limit: 100,
+            limit: limit,
         }
         const response = await handleHTTPRequest('GET', url, {}, params, null);
         if (response.status !== 200){
@@ -43,10 +43,13 @@ const Conversation = (props) => {
         else{
             if(!is_pagination){
                 setConversations(response.data.dataSource);
+                if(response.data.dataSource.length < limit){
+                    setHasMore(false);
+                }
                 return;
             }
 
-            if(response.data.dataSource.length < 100){
+            if(response.data.dataSource.length < limit){
                 setHasMore(false);
                 return;
             }
@@ -130,11 +133,20 @@ const Conversation = (props) => {
         }
 
         try{
-            const data = {
-                sender_id: props.user_id,
-                receiver_id: props.members.filter(member => member.user_id !== props.user_id).map(member => member.user_id)[0],
-                text: message,
-                attachments: []
+            let data = {}
+            if(!props.isGroup){
+                data = {
+                    sender_id: props.user_id,
+                    receiver_id: props.members.filter(member => member.user_id !== props.user_id).map(member => member.user_id)[0],
+                    text: message,
+                    attachments: []
+                }
+            }else{
+                data = {
+                    sender_id: props.user_id,
+                    text: message,
+                    attachments: []
+                }
             }
 
             const newChat = {
@@ -158,7 +170,12 @@ const Conversation = (props) => {
             }
             updateConversations(newConversation);
 
-            const response = await handleHTTPRequest('POST', config.inbox.send_message(data.receiver_id), {}, null, data);
+            let response = null
+            if(!props.isGroup){
+                response = await handleHTTPRequest('POST', config.inbox.send_message(data.receiver_id), {}, null, data);
+            }else{
+                response = await handleHTTPRequest('POST', config.inbox.send_group_message(inboxIdRef.current), {}, null, data);
+            }
             if(response.status !== 200){
                 console.log("Error: ", response.data);
 

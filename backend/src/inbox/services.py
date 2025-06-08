@@ -2,7 +2,15 @@ import logging
 import traceback
 from .models import Inbox, Message, InboxMember, MessageStatus, Attachment
 from accounts.models import User
-from .serializers import MessageSerializer, ChatSerializer, ConversationSerializer, UserSerializer, GroupSerializer
+from .serializers import (
+    MessageSerializer,
+    ChatSerializer,
+    ConversationSerializer,
+    UserSerializer,
+    GroupSerializer,
+    GroupCreationSerializer,
+    GroupMessageSerializer,
+)
 from helpers.custom_exception import DRFViewException, convert_exception_string_to_one_line
 from rest_framework import status
 from django.db.models import Q, F, Count, OuterRef, Subquery, IntegerField, QuerySet
@@ -48,6 +56,7 @@ def get_chats(user_id: int, offset: int = 0, limit: int = 20, **kwargs) -> list[
             receiver_id = None
             receiver_nickname = None
             members = list()
+            user_id_list = list()
             for member in inbox_members:
                 members.append(
                     {
@@ -62,6 +71,8 @@ def get_chats(user_id: int, offset: int = 0, limit: int = 20, **kwargs) -> list[
                 if member.user_id != user_id:
                     receiver_id = member.user_id
                     receiver_nickname = member.nickname
+                    user_id_list.append(member.user_id)
+
             inbox_data = inbox.__dict__
             inbox_data["inbox_id"] = inbox_data.pop("id")
             inbox_data["inbox_members"] = members
@@ -73,6 +84,12 @@ def get_chats(user_id: int, offset: int = 0, limit: int = 20, **kwargs) -> list[
                     inbox_data["inbox_name"] = receiver_nickname
                     inbox_data["is_active"] = user.userinfo.status == UserStatus.ACTIVE
                     inbox_data["last_active_time"] = user.userinfo.last_active_time
+
+            if inbox.is_group:
+                inbox_data["inbox_name"] = inbox.inbox_name
+                active_count = User.objects.filter(id__in=user_id_list, userinfo__status=UserStatus.ACTIVE).count()
+                inbox_data["is_active"] = active_count > 0
+
             serializer = ChatSerializer(data=inbox_data)
             if not serializer.is_valid():
                 logger.error(
@@ -177,7 +194,7 @@ def get_users(user_id: int, is_active: bool | None = None, offset: int = 0, limi
                 status=F("userinfo__status"),
                 last_active_time=F("userinfo__last_active_time"),
             )
-            .values("id", "username", "profile_photo", "status", "last_active_time")
+            .values("id", "username", "first_name", "last_name", "profile_photo", "status", "last_active_time")
             .order_by("-userinfo__created_at")[offset : offset + limit]
         )
 
@@ -265,6 +282,7 @@ def get_groups(user_id: int, offset: int = 0, limit: int = 20, **kwargs) -> list
                 inbox_id=group.id,
             )
             members = list()
+            user_id_list = list()
             for member in inbox_members:
                 members.append(
                     {
@@ -273,10 +291,14 @@ def get_groups(user_id: int, offset: int = 0, limit: int = 20, **kwargs) -> list
                         "is_blocked": member.is_blocked,
                     }
                 )
+                if member.user_id != user_id:
+                    user_id_list.append(member.user_id)
 
             group_data = group.__dict__
             group_data["inbox_id"] = group_data.pop("id")
             group_data["inbox_members"] = members
+            active_count = User.objects.filter(id__in=user_id_list, userinfo__status=UserStatus.ACTIVE).count()
+            group_data["is_active"] = active_count > 0
             serializer = GroupSerializer(data=group.__dict__)
             if not serializer.is_valid():
                 logger.error(
@@ -304,6 +326,53 @@ def get_groups(user_id: int, offset: int = 0, limit: int = 20, **kwargs) -> list
     return groups
 
 
+def create_group(user_id: int, data: dict, **kwargs) -> bool:
+    logger.info("Starting group creation process....")
+    try:
+        serializer = GroupCreationSerializer(data=data)
+        if not serializer.is_valid():
+            message = "Could not validate the data provided by the user for creating group."
+            logger.error(msg={"message": message, "error": serializer.errors})
+            raise DRFViewException(
+                detail="The data provided is not valid.",
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        inbox = Inbox.objects.create(
+            inbox_name=serializer.validated_data.get("inbox_name", ""),
+            is_group=True,
+            created_by=user_id,
+            last_message_timestamp=int(datetime.now(timezone.utc).timestamp()),
+        )
+
+        InboxMember.objects.create(
+            inbox_id=inbox.id,
+            user_id=user_id,
+            role="admin",
+        )
+
+        for id in serializer.validated_data.get("inbox_members", []):
+            InboxMember.objects.create(
+                inbox_id=inbox.id,
+                user_id=id,
+                role="user",
+            )
+
+    except APIException as error:
+        raise DRFViewException(detail=error.detail, status_code=status.HTTP_400_BAD_REQUEST)
+    except Exception:
+        logger.error(
+            {
+                "message": "Couldn't create group.",
+                "error": convert_exception_string_to_one_line(traceback.format_exc()),
+            }
+        )
+        raise DRFViewException(detail="Couldn't create group.", status_code=status.HTTP_400_BAD_REQUEST)
+
+    logger.info("Group is created successfully.Ending group creation process....")
+    return True
+
+
 def send_message(receiver_id: int, data: dict, **kwargs) -> bool:
     logger.info("Starting send message process....")
     try:
@@ -316,13 +385,17 @@ def send_message(receiver_id: int, data: dict, **kwargs) -> bool:
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
 
-        sender = User.objects.filter(id=serializer.validated_data.get("sender_id", 0)).first()
-        if not sender:
+        sender = User.objects.filter(id=serializer.validated_data.get("sender_id", 0))
+        if not sender.exists():
             raise DRFViewException(detail="Sender does not exist.", status_code=status.HTTP_400_BAD_REQUEST)
+        else:
+            sender = sender.first()
 
-        receiver = User.objects.filter(id=receiver_id).first()
-        if not receiver:
+        receiver = User.objects.filter(id=receiver_id)
+        if not receiver.exists():
             raise DRFViewException(detail="Receiver does not exist.", status_code=status.HTTP_400_BAD_REQUEST)
+        else:
+            receiver = receiver.first()
 
         current_timestamp = int(datetime.now(timezone.utc).timestamp())
         inbox = (
@@ -423,7 +496,7 @@ def send_message(receiver_id: int, data: dict, **kwargs) -> bool:
                 logger.info(f"Message event sent successfully to channels: {[f'message_{receiver_id}']}.")
 
             message_status.is_sent = True
-            message_status.save()
+            message_status.save(update_fields=["is_sent"])
         except Exception:
             logger.error(
                 {
@@ -432,7 +505,7 @@ def send_message(receiver_id: int, data: dict, **kwargs) -> bool:
                 }
             )
             message_status.is_failed = True
-            message_status.save()
+            message_status.save(update_fields=["is_failed"])
             return False
     except APIException as error:
         raise DRFViewException(detail=error.detail, status_code=status.HTTP_400_BAD_REQUEST)
@@ -446,6 +519,125 @@ def send_message(receiver_id: int, data: dict, **kwargs) -> bool:
         raise DRFViewException(detail="Couldn't send message.", status_code=status.HTTP_400_BAD_REQUEST)
 
     logger.info("Ending send message process....")
+    return True
+
+
+def send_group_message(inbox_id: int, data: dict, **kwargs) -> bool:
+    logger.info("Starting group message sending process....")
+    try:
+        serializer = GroupMessageSerializer(data=data)
+        if not serializer.is_valid():
+            message = "Could not validate the data provided by the user for sending group message."
+            logger.error(msg={"message": message, "error": serializer.errors})
+            raise DRFViewException(
+                detail="The data provided is not valid.",
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        sender = User.objects.filter(id=serializer.validated_data.get("sender_id", 0))
+        if not sender.exists():
+            raise DRFViewException(detail="Sender does not exist.", status_code=status.HTTP_400_BAD_REQUEST)
+        else:
+            sender = sender.first()
+
+        inbox = Inbox.objects.filter(id=inbox_id)
+        if not inbox.exists():
+            raise DRFViewException(detail="Inbox does not exist.", status_code=status.HTTP_400_BAD_REQUEST)
+        else:
+            inbox = inbox.first()
+
+        current_timestamp = int(datetime.now(timezone.utc).timestamp())
+        last_message = serializer.validated_data.get("text", "")[:20]
+        if len(serializer.validated_data.get("text", "")) > 20:
+            last_message += "..."
+
+        inbox.last_message = last_message
+        inbox.last_message_sender = serializer.validated_data.get("sender_id", 0)
+        inbox.last_message_timestamp = current_timestamp
+        inbox.save(update_fields=["last_message", "last_message_sender", "last_message_timestamp"])
+
+        message = Message.objects.create(
+            inbox_id=inbox.id,
+            sender_id=serializer.validated_data.get("sender_id", 0),
+            text=serializer.validated_data.get("text", ""),
+            has_attachment=(len(serializer.validated_data.get("attachments", [])) > 0),
+        )
+
+        members = InboxMember.objects.filter(inbox_id=inbox_id).only("user_id")
+        for member in members:
+            message_status = None
+            if member.user_id != serializer.validated_data.get("sender_id", 0):
+                message_status = MessageStatus.objects.create(
+                    message=message,
+                    user_id=member.user_id,
+                    is_queued=True,
+                )
+            else:
+                continue
+
+            try:
+                # Inbox Event for the left side chatbox
+                response = trigger_pusher(
+                    channels=[f"inbox_{member.user_id}"],
+                    event="inbox",
+                    data={
+                        "inbox_id": inbox.id,
+                        "sender_id": serializer.validated_data.get("sender_id", 0),
+                        "message": last_message,
+                        "timestamp": serializer.validated_data.get("timestamp", current_timestamp),
+                    },
+                )
+                if not response:
+                    logger.info("Couldn't send inbox event. Received false response from pusher.")
+                    return False
+                else:
+                    logger.info(f"Inbox event sent successfully to channels: {[f'inbox_{member.user_id}']}.")
+
+                # Message Event for the conversations
+                response = trigger_pusher(
+                    channels=[f"message_{member.user_id}"],
+                    event="message",
+                    data={
+                        "inbox_id": inbox.id,
+                        "message_id": message.id,
+                        "sender_id": serializer.validated_data.get("sender_id", 0),
+                        "text": serializer.validated_data.get("text", ""),
+                        "has_attachment": message.has_attachment,
+                        "attachments": [],
+                        "created_at": message.created_at.isoformat(),
+                        "updated_at": message.updated_at.isoformat(),
+                    },
+                )
+                if not response:
+                    logger.info("Couldn't send message event. Received false response from pusher.")
+                    return False
+                else:
+                    logger.info(f"Message event sent successfully to channels: {[f'message_{member.user_id}']}.")
+
+                message_status.is_sent = True
+                message_status.save(update_fields=["is_sent"])
+            except Exception:
+                logger.error(
+                    {
+                        "message": "Couldn't send message via pusher.",
+                        "error": convert_exception_string_to_one_line(traceback.format_exc()),
+                    }
+                )
+                message_status.is_failed = True
+                message_status.save(update_fields=["is_failed"])
+                return False
+    except APIException as error:
+        raise DRFViewException(detail=error.detail, status_code=status.HTTP_400_BAD_REQUEST)
+    except Exception:
+        logger.error(
+            {
+                "message": "Couldn't send message.",
+                "error": convert_exception_string_to_one_line(traceback.format_exc()),
+            }
+        )
+        raise DRFViewException(detail="Couldn't send message.", status_code=status.HTTP_400_BAD_REQUEST)
+
+    logger.info("Ending group message sending process....")
     return True
 
 

@@ -4,6 +4,7 @@ import './Chat.css';
 import ProfileIcon from '../../assets/icons/profile_avatar.svg';
 import SearchIcon from '../../assets/icons/search.svg';
 import ChatIcon from '../../assets/icons/chat-icon.svg';
+import GroupIconImage from '../../assets/images/group.png';
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
@@ -11,8 +12,24 @@ import axios from 'axios';
 import config from '../../externals/config';
 import { selectedStates } from '../../const';
 import { toast } from 'react-toastify';
+import GroupCreation from '../../components/GroupCreation/GroupCreation';
 
 
+function useDebounce(value, delay) {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+
+    useEffect(() => {
+      const handler = setTimeout(() => {
+        setDebouncedValue(value);
+      }, delay);
+
+      return () => {
+        clearTimeout(handler);
+      };
+    }, [value, delay]);
+
+    return debouncedValue;
+}
 
 const Chat = () => {
     const [inboxId, setInboxId] = useState(null);
@@ -24,6 +41,10 @@ const Chat = () => {
     const [friendList, setFriendList] = useState([]);
     const [userList, setUserList] = useState([]);
     const [searchText, setSearchText] = useState("");
+
+    const [isCreateGroup, setIsCreateGroup] = useState(false);
+    const [isGroup, setIsGroup] = useState(false);
+    const debouncedSearchText = useDebounce(searchText, 500);
 
 
     const location = useLocation();
@@ -69,9 +90,15 @@ const Chat = () => {
         setSearchText("");
     }
 
+    const handleCreateGroupClick = () => {
+        setIsCreateGroup(true);
+    }
+
+
     const handleSearchChange = (e) => {
         setSearchText(e.target.value);
     }
+
 
     const args = {
         inboxId:inboxId,
@@ -89,16 +116,32 @@ const Chat = () => {
         userList: userList,
         setUserList: setUserList,
         searchText: searchText,
+        debouncedSearchText: debouncedSearchText,
+        isCreateGroup: isCreateGroup,
+        isGroup: isGroup,
+        setIsGroup: setIsGroup,
     }
+
 
     return (
         <div className='chat'>
+            {
+                isCreateGroup &&
+                <GroupCreation setIsCreateGroup={setIsCreateGroup} user_id={user_id}/>
+            }
             <div className="chat-left">
                 <div className="chat-left-top">
                     <div className="topmost">
                         <img src={ProfileIcon} alt="Profile LOGO" width={30} height={30} className='profile-icon'/>
                         <span className='username'>{username}</span>
-                        <img src={ChatIcon} alt="Chat LOGO" width={30} height={30} className='chat-icon' onClick={() => handleClick(selectedStates.CHATS)} style={{boxShadow: currentState === selectedStates.CHATS ? "0 2px 0 #FAF9F6" : undefined}}/>
+                        <div className="custom-tooltip-container">
+                            <img src={ChatIcon} alt="Chat LOGO" width={30} height={30} className='chat-icon' onClick={() => handleClick(selectedStates.CHATS)} style={{boxShadow: currentState === selectedStates.CHATS ? "0 2px 0 #FAF9F6" : undefined}}/>
+                            <span className="custom-tooltip">Chats</span>
+                        </div>
+                        <div className="custom-tooltip-container">
+                            <img src={GroupIconImage} alt="Group Logo" width={30} height={30} className='group-button' onClick={handleCreateGroupClick}/>
+                            <span className="custom-tooltip">Create New Group</span>
+                        </div>
                         <span className="logout" onClick={logout}>Logout</span>
                     </div>
                     <div className='search'>

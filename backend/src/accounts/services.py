@@ -33,8 +33,13 @@ def register(body: dict) -> dict:
     if not is_strong:
         raise DRFViewException(detail=message, status_code=status.HTTP_400_BAD_REQUEST)
 
+    username = serializer.validated_data.get("username", "")
+    parts = username.strip().split()
+    first_name, last_name = parts[0], ("" if len(parts) == 1 else " ".join(parts[1:]))
     user = User.objects.create_user(
-        username=serializer.validated_data.get("username", ""),
+        username=username,
+        first_name=first_name,
+        last_name=last_name,
         email=serializer.validated_data.get("email", ""),
         password=serializer.validated_data.get("password", ""),
     )

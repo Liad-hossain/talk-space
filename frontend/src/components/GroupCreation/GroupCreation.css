@@ -1,0 +1,124 @@
+@import '../../index.css';
+
+
+.group-creation-overlay{
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent black */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Higher than everything else */
+}
+
+
+.group-creation-container{
+  background-color:  #FFFFF5;
+  padding: 2rem;
+  border-radius: 15px;
+  width: 40%;
+  height: 60vh;
+  overflow: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  position: relative;
+  display: grid;
+  grid-template-rows: auto auto auto 6fr auto;
+  gap: 10px;
+  align-items: space-between;
+  overflow-y: hidden;
+}
+
+
+.group-name{
+  font-size: 15px;
+  font-weight: 500;
+  margin: 0;
+  font-family: 'Poppins';
+  height: 40px;
+  padding-left: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--light-dark-color);
+}
+
+
+.suggested-search {
+    background: #f2f6ff;
+    border-radius: 30px;
+    width: 100%;
+    height: 45px;
+    display: grid;
+    grid-template-columns: 0.6fr 9fr;
+    align-items: center;
+    padding-left: 10px;
+}
+
+.suggested-user-search {
+    background: #f2f6ff;
+    border: none;
+    border-radius: 30px;
+    outline: none;
+    height: 80%;
+    width: 100%;
+    font-size: 15px;
+    font-family: "Poppins";
+    color: black;
+}
+
+
+.group-member-container{
+    display: flex;
+    gap: 5px;
+    overflow-x: scroll;
+    scrollbar-width: none;
+}
+
+.suggestion-container{
+    overflow-y: scroll;
+    scrollbar-width: none;
+}
+
+
+.button-container{
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    align-items: center;
+}
+
+.cancel-button{
+    border: none;
+    border-radius: 10px;
+    padding: 10px;
+    background: var(--light-dark-color);
+    color: white;
+    font-size: 15px;
+    font-weight: 550;
+    font-family: "Poppins";
+    cursor: pointer;
+    opacity: 0.85;
+}
+
+.cancel-button:hover{
+    opacity: 1;
+    cursor: pointer;
+}
+
+.create-button{
+    border: none;
+    border-radius: 10px;
+    padding: 10px;
+    background: var(--green-button-color);
+    color: white;
+    font-size: 15px;
+    font-weight: 550;
+    font-family: "Poppins";
+    opacity: 0.75;
+}
+
+.create-button:hover{
+    opacity: 1;
+    cursor: pointer;
+}

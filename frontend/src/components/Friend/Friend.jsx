@@ -12,6 +12,7 @@ const Friend = (props) => {
         props.setInboxId(props.inbox_id);
         props.setInboxName(props.inbox_name);
         props.setMembers(props.inbox_members);
+        props.setIsGroup(props.is_group);
 
         if(props.unseen_count > 0){
             const body = {

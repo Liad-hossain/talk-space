@@ -11,6 +11,7 @@ const User = (props) => {
         props.setInboxName(props.inbox_name || props.username);
         props.setSelectedId(props.inbox_id || props.id);
         props.setMembers(props.inbox_members);
+        props.setIsGroup(props.is_group);
 
         const body = {
             event: "seen",
