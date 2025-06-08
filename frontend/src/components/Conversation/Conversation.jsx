@@ -66,9 +66,9 @@ const Conversation = (props) => {
         }
         return conversation_list.map((conversation) => {
             if(conversation.sender_id === props.user_id){
-                return <MyContent {...conversation}/>
+                return <MyContent {...conversation} />
             }else{
-                return <FriendContent {...conversation}/>
+                return <FriendContent {...conversation} isGroup={props.isGroup}/>
             }
         })
     }
@@ -102,19 +102,12 @@ const Conversation = (props) => {
     }
 
 
-    const updateConversations = async(newConversation) => {
+    const updateConversations = async(newConversation, toPublishEvent = true) => {
         if(!newConversation || newConversation.inbox_id !== inboxIdRef.current){
             return;
         }
 
-        const body = {
-            event: "seen",
-            data: {
-                user_id: props.user_id,
-            }
-        }
-        await handleHTTPRequest('POST', config.inbox.send_inbox_event(newConversation.inbox_id), {}, null, body);
-
+        let isExists = false;
         setConversations(prevConversations => {
             // Check if message already exists in current state
             const exists = prevConversations.some(
@@ -122,13 +115,26 @@ const Conversation = (props) => {
             );
 
             if (exists) {
-              console.log("Message already exists, skipping");
-              return prevConversations;
+                isExists = true;
+                console.log("Message already exists, skipping");
+                return prevConversations;
             }
-            console.log("New Conversation: ",newConversation);
             console.log("Adding new message");
             return [newConversation, ...prevConversations];
         });
+
+        const body = {
+            event: "seen",
+            data: {
+                user_id: props.user_id,
+            }
+        }
+
+        if(toPublishEvent &&newConversation.inbox_id && newConversation.inbox_id === props.inboxId && !isExists){
+            console.log("New conversation id: ", newConversation.inbox_id);
+            console.log("Current Inbox id: ", inboxIdRef.current);
+            await handleHTTPRequest('POST', config.inbox.send_inbox_event(newConversation.inbox_id), {}, null, body);
+        }
     }
 
 
@@ -177,7 +183,7 @@ const Conversation = (props) => {
                 "created_at": new Date().toISOString(),
                 "updated_at": new Date().toISOString(),
             }
-            updateConversations(newConversation);
+            updateConversations(newConversation, false);
 
             let response = null
             if(!props.isGroup){
@@ -189,6 +195,11 @@ const Conversation = (props) => {
                 console.log("Error: ", response.data);
 
             }
+
+            const audio = new Audio("/sounds/message_send_audio.mp3");
+            audio.play().catch(error => {
+                console.error('Error playing audio:', error);
+            });
         }catch(error){
             console.log("Error: ", error);
         }
@@ -261,7 +272,6 @@ const Conversation = (props) => {
             updateConversations(data);
         });
     },[props.inboxId, props.user_id]);
-
 
     return (
         <div className='conversation'>

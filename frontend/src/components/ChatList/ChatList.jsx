@@ -22,6 +22,10 @@ const ChatList = (props) => {
 
     const updateFriend = (data) => {
         console.log("Data received via pusher: ", data);
+        const audio = new Audio("/sounds/message_received_sound.mp3");
+        audio.play().catch(error => {
+            console.error('Error playing audio:', error);
+        });
         props.setFriendList(prevFriends => {
 
             if (prevFriends.some(f =>
