@@ -13,6 +13,8 @@ const Friend = (props) => {
         props.setInboxName(props.inbox_name);
         props.setMembers(props.inbox_members);
         props.setIsGroup(props.is_group);
+        props.setIsActive(props.is_active);
+        props.setLastActiveTime(props.last_active_time);
 
         if(props.unseen_count > 0){
             const body = {

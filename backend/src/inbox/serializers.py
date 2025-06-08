@@ -37,6 +37,8 @@ class ChatSerializer(serializers.Serializer):
 class ConversationSerializer(serializers.Serializer):
     message_id = serializers.IntegerField(required=True)
     sender_id = serializers.IntegerField(required=True)
+    sender_name = serializers.CharField(required=True, max_length=255)
+    sender_status = serializers.CharField(required=True, max_length=255)
     text = serializers.CharField(required=True, max_length=255)
     has_attachment = serializers.BooleanField(required=True)
     attachments = serializers.ListField(child=serializers.DictField(), required=True)

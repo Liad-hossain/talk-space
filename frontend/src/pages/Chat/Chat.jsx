@@ -46,6 +46,9 @@ const Chat = () => {
     const [isGroup, setIsGroup] = useState(false);
     const debouncedSearchText = useDebounce(searchText, 500);
 
+    const [isActive, setIsActive] = useState(false);
+    const [lastActiveTime, setLastActiveTime] = useState(null);
+
 
     const location = useLocation();
     const navigate = useNavigate();
@@ -120,6 +123,10 @@ const Chat = () => {
         isCreateGroup: isCreateGroup,
         isGroup: isGroup,
         setIsGroup: setIsGroup,
+        isActive: isActive,
+        setIsActive: setIsActive,
+        lastActiveTime: lastActiveTime,
+        setLastActiveTime: setLastActiveTime,
     }
 
 

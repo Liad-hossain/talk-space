@@ -6,10 +6,16 @@ import { convertDatetimeToShowTime } from '../../utils';
 const FriendContent = (props) => {
     return (
         <div className='friend-content' key={props.id}>
-            <img src={Profile} alt="Friend Profile" width={50} height={50} className='friend-photo'/>
-            <div className="friend-text-box">
-                <span className='friend-message'>{props.text}</span>
-                <span className='friend-time'>{convertDatetimeToShowTime(props.created_at)}</span>
+            <div className="friend-conversation-image-container">
+                <img src={Profile} alt="Friend Profile" className='friend-photo'/>
+                {props.sender_status === "active" && <div className="friend-active-status"></div>}
+            </div>
+            <div className="friend-message-box">
+                <span className="content-friend-name">{props.sender_name}</span>
+                <div className="friend-text-box">
+                    <span className='friend-message'>{props.text}</span>
+                    <span className='friend-time'>{convertDatetimeToShowTime(props.created_at)}</span>
+                </div>
             </div>
         </div>
     );

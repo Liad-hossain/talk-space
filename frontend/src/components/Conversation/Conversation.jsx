@@ -102,10 +102,18 @@ const Conversation = (props) => {
     }
 
 
-    const updateConversations = (newConversation) => {
+    const updateConversations = async(newConversation) => {
         if(!newConversation || newConversation.inbox_id !== inboxIdRef.current){
             return;
         }
+
+        const body = {
+            event: "seen",
+            data: {
+                user_id: props.user_id,
+            }
+        }
+        await handleHTTPRequest('POST', config.inbox.send_inbox_event(newConversation.inbox_id), {}, null, body);
 
         setConversations(prevConversations => {
             // Check if message already exists in current state
@@ -117,11 +125,12 @@ const Conversation = (props) => {
               console.log("Message already exists, skipping");
               return prevConversations;
             }
-
+            console.log("New Conversation: ",newConversation);
             console.log("Adding new message");
             return [newConversation, ...prevConversations];
-          });
+        });
     }
+
 
     const handleSendMessage = async(e) => {
         e.preventDefault();
@@ -185,6 +194,7 @@ const Conversation = (props) => {
         }
     }
 
+
     const handleEmojiSelect = (emoji, e) => {
         formRef.current.message.value += emoji;
         console.log(e.target.value);
@@ -197,6 +207,39 @@ const Conversation = (props) => {
           handleSendMessage(e);
         }
     };
+
+
+    const get_active_text = () => {
+        if(props.isGroup){
+            return null;
+        }
+
+        if(props.isActive){
+            return "Active now";
+        }
+
+        const pastTime = new Date(props.lastActiveTime);
+        const currentTime = new Date();
+
+        // Calculate difference in milliseconds and convert to seconds
+        const secondsAgo = Math.floor((currentTime - pastTime) / 1000);
+
+        if(secondsAgo < 60){
+            return "Active " +secondsAgo + " seconds ago";
+        }
+        else if(secondsAgo >=60 && secondsAgo < 3600){
+            return "Active " + Math.floor(secondsAgo / 60) + " minutes ago";
+        }
+        else if(secondsAgo >=3600 && secondsAgo < 86400){
+            return "Active " + Math.floor(secondsAgo / 3600) + " hours ago";
+        }
+        return null
+    }
+
+
+    useEffect(() => {
+
+    }, [props.lastActiveTime]);
 
 
     useEffect(() => {
@@ -223,12 +266,15 @@ const Conversation = (props) => {
     return (
         <div className='conversation'>
             <div className="conversation-top">
-                <img src={Profile} alt="My Profile" width={50} height={50} className='conversation-profile'/>
+                <div className="conversation-image-container">
+                    <img src={Profile} alt="My Profile" className='conversation-profile'/>
+                    {props.isActive && <div className="conversation-active-status"></div>}
+                </div>
                 <div className="user-status">
                     <span className='user-name'>{props.inboxName}</span>
-                    <span className='user-status-text'>Active now</span>
+                    <span className='user-status-text'>{get_active_text()}</span>
                 </div>
-                <img src={ThreeDots} alt='Three Dots Icon' width={50} height={50} className='three-dots-icon'/>
+                <img src={ThreeDots} alt='Three Dots Icon' className='three-dots-icon' width={50} height={50}/>
             </div>
             <div className="conversation-bottom">
                 <div className='conversation-content' id="scrollableConversationContainer" ref={scrollRef}>

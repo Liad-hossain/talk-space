@@ -141,6 +141,8 @@ def get_conversations(inbox_id: int, offset: int = 0, limit: int = 20, **kwargs)
                 )
 
             conversation_data = message.__dict__
+            conversation_data["sender_name"] = message.sender.username
+            conversation_data["sender_status"] = message.sender.userinfo.status
             conversation_data["message_id"] = conversation_data.pop("id")
             conversation_data["attachments"] = attachments
             serializer = ConversationSerializer(data=conversation_data)
@@ -601,6 +603,8 @@ def send_group_message(inbox_id: int, data: dict, **kwargs) -> bool:
                         "inbox_id": inbox.id,
                         "message_id": message.id,
                         "sender_id": serializer.validated_data.get("sender_id", 0),
+                        "sender_name": message.sender.username,
+                        "sender_status": message.sender.userinfo.status,
                         "text": serializer.validated_data.get("text", ""),
                         "has_attachment": message.has_attachment,
                         "attachments": [],
