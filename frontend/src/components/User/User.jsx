@@ -49,7 +49,7 @@ const User = (props) => {
     return (
         <div className='user-selected' key={myId} onClick={handleUserClick} style={{backgroundColor: myId === props.selectedId ? "var(--clicked-chatbox-color)" : undefined}}>
             <div className="inbox-profile-container">
-                <img src={ProfileIcon} alt="My Profile" width={50} height={50} className='inbox-profile'/>
+                <img src={props.profile_photo || ProfileIcon} alt="My Profile" width={50} height={50} className='inbox-profile'/>
                 {props.is_active ? <div className="active-status"></div> : (get_last_active_time() != null) && <div className="inactive-status">{get_last_active_time()}</div>}
             </div>
             <span className='inbox-name'>{props.inbox_name || props.username}</span>

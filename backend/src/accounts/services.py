@@ -1,4 +1,5 @@
 import logging
+import os
 from accounts.serializers import RegisterSerializer, UserSerializer, LoginSerializer
 from rest_framework import status
 from accounts.models import User, UserInfo
@@ -8,6 +9,8 @@ from django.utils import timezone
 from helpers.const import UserEvents, RedisChannelNames
 from externals.redis_utils import publish_message_to_channel
 from datetime import datetime
+from helpers.utils import upload_image_to_cloudinary
+from django.core.files.storage import default_storage
 
 
 logger = logging.getLogger("stdout")
@@ -162,4 +165,58 @@ def process_user_event(message: dict):
 
     if is_success:
         logger.info(f"User event process for event: {event} is completed successfully!!!")
+    return is_success
+
+
+def get_profile(user_id: int) -> dict:
+    user = User.objects.filter(id=user_id)
+    if not user.exists():
+        raise DRFViewException(detail="User does not exist.", status_code=status.HTTP_400_BAD_REQUEST)
+
+    return UserSerializer(user.first()).data
+
+
+def update_profile(user_id: int, data: dict = dict(), file_obj=None) -> bool:
+    user = User.objects.filter(id=user_id).first()
+    if not user:
+        raise DRFViewException(detail="User does not exist.", status_code=status.HTTP_400_BAD_REQUEST)
+
+    is_success = True
+    if file_obj:
+        file_url = upload_image_to_cloudinary(file_obj)
+
+        if file_url:
+            user.userinfo.profile_photo = file_url
+            user.userinfo.save(update_fields=["profile_photo"])
+        else:
+            is_success = False
+
+    if data:
+        user.username = data.get("username", user.username)
+        user.userinfo.username = user.username
+        parts = user.username.strip().split()
+        user.first_name, user.last_name = parts[0], ("" if len(parts) == 1 else " ".join(parts[1:]))
+        user.email = data.get("email", user.userinfo.email)
+        user.userinfo.email = user.email
+        user.userinfo.phone_number = data.get("phone_number", user.userinfo.phone_number)
+        user.userinfo.city = data.get("city", user.userinfo.city)
+        user.userinfo.country = data.get("country", user.userinfo.country)
+        user.userinfo.save(
+            update_fields=[
+                "username",
+                "email",
+                "phone_number",
+                "city",
+                "country",
+            ]
+        )
+        user.save(
+            update_fields=[
+                "username",
+                "first_name",
+                "last_name",
+                "email",
+            ]
+        )
+
     return is_success

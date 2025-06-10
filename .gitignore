@@ -22,7 +22,7 @@
 **/Network Trash Folder
 **/Temporary Items
 **/.apdisk
-
+**/client_secrets.json
 ### Python ###
 # Byte-compiled / optimized / DLL files
 **/__pycache__/

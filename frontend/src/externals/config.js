@@ -7,6 +7,8 @@ const config = {
         logout: () => `${TALKSPACE_BACKEND_BASE_URL}/api/accounts/logout`,
         refresh: () => `${TALKSPACE_BACKEND_BASE_URL}/api/accounts/refresh`,
         publish_event: () => `${TALKSPACE_BACKEND_BASE_URL}/api/accounts/publish-event`,
+        get_profile: (user_id) => `${TALKSPACE_BACKEND_BASE_URL}/api/accounts/${user_id}/profile`,
+        update_profile: (user_id) => `${TALKSPACE_BACKEND_BASE_URL}/api/accounts/${user_id}/update-profile`,
     },
     inbox: {
         get_chats: (user_id) => `${TALKSPACE_BACKEND_BASE_URL}/api/inbox/${user_id}/chats`,

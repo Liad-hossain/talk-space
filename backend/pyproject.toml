@@ -24,6 +24,7 @@ pusher = "^3.3.3"
 drf-spectacular = "^0.28.0"
 django-redis = "^5.4.0"
 taskiq-redis = "^1.0.8"
+cloudinary = "^1.44.0"
 
 
 [build-system]

@@ -51,14 +51,14 @@ const Conversation = (props) => {
                 return;
             }
 
-            if(response.data.dataSource.length < limit){
-                setHasMore(false);
-                return;
-            }
             setConversations((prevItems) => [
                 ...prevItems,
                 ...response.data.dataSource,
             ]);
+
+            if(response.data.dataSource.length < limit){
+                setHasMore(false);
+            }
         }
     }
 

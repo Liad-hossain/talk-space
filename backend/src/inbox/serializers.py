@@ -24,6 +24,7 @@ class GroupMessageSerializer(serializers.Serializer):
 class ChatSerializer(serializers.Serializer):
     inbox_id = serializers.IntegerField(required=True)
     inbox_name = serializers.CharField(max_length=255, allow_blank=True, allow_null=True, default="")
+    profile_photo = serializers.CharField(required=False, allow_blank=True, allow_null=True, max_length=255, default="")
     is_group = serializers.BooleanField(default=False)
     inbox_members = serializers.ListField(child=serializers.DictField(), required=True)
     last_message = serializers.CharField(max_length=255, allow_blank=True, default="")
@@ -39,6 +40,7 @@ class ConversationSerializer(serializers.Serializer):
     sender_id = serializers.IntegerField(required=True)
     sender_name = serializers.CharField(required=True, max_length=255)
     sender_status = serializers.CharField(required=True, max_length=255)
+    sender_profile_photo = serializers.CharField(required=False, allow_null=True, max_length=255)
     text = serializers.CharField(required=True, max_length=255)
     has_attachment = serializers.BooleanField(required=True)
     attachments = serializers.ListField(child=serializers.DictField(), required=True)

@@ -13,7 +13,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from django.utils.decorators import method_decorator
 from drf_spectacular.utils import extend_schema, inline_serializer
 
-from accounts.services import register, login, logout
+from accounts.services import register, login, logout, get_profile, update_profile
 from externals.redis_utils import publish_message_to_channel
 from helpers.const import RedisChannelNames
 
@@ -82,4 +82,27 @@ def publish_user_event_view(request: Request, *args, **kwargs) -> Response:
     if is_success:
         logger.info("User event published successfully.")
 
+    return Response(data={"success": is_success}, status=200)
+
+
+@api_view(["GET"])
+@permission_classes((IsAuthenticated,))
+def get_profile_view(request: Request, *args, **kwargs) -> Response:
+    logger.info("Entered get profile photo view.")
+    data = get_profile(user_id=kwargs.get("user_id"))
+    return Response(data={"success": True, "dataSource": data}, status=200)
+
+
+@api_view(["POST"])
+@permission_classes((IsAuthenticated,))
+def update_profile_view(request: Request, *args, **kwargs) -> Response:
+    logger.info("Entered update profile photo view.")
+    file_keys = [key for key, value in request.data.items() if hasattr(value, "read")]
+    for key in file_keys:
+        print(f"Removing file from data: {key}")
+        request.data.pop(key)
+
+    is_success = update_profile(
+        user_id=kwargs.get("user_id"), data=request.data, file_obj=request.FILES.get("file", None)
+    )
     return Response(data={"success": is_success}, status=200)

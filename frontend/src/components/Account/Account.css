@@ -1,0 +1,186 @@
+@import '../../index.css';
+
+.account-container{
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 75vw;
+    bottom: 0;
+    background-color: var(--chat-search-bg-color);
+    display: grid;
+    grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
+    justify-content: start;
+    align-items: center;
+    z-index: 1000; /* Higher than everything else */
+    padding: 20px;
+}
+
+
+.account-header{
+    font-size: 30px;
+    font-weight: 600;
+    font-family: "Poppins";
+    letter-spacing: 0.01rem;
+    border-bottom: 1px solid white;
+    width: 100%;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.add-image-container{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 20px;
+    width: 100%;
+    padding: 10px 20px;
+    border-bottom: 1px solid white;
+    border-radius: 10px;
+    margin-bottom: 10px;
+}
+
+.add-img-icon{
+    border-radius: 50%;
+}
+
+.add-img-icon:hover{
+    cursor: pointer;
+}
+
+.add-image-text{
+    font-size: 15px;
+    font-weight: 450;
+    font-family: "Poppins";
+    letter-spacing: 0.01rem;
+    color: white;
+}
+
+
+.profile-save-btn{
+    border-radius: 5px;
+    padding: 3px 10px;
+    background-color: var(--green-button-color);
+    color: white;
+    font-size: 13px;
+    font-weight: 450;
+    font-family: "Poppins";
+    letter-spacing: 0.01rem;
+    cursor: pointer;
+}
+
+.account-name-container, .account-email-container, .account-phone-container, .account-city-container, .account-country-container{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 20px;
+    width: 100%;
+    padding: 10px 20px;
+    border-bottom: 1px solid white;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    background-color: var(--light-dark-color);
+}
+
+
+.username-label, .email-label, .phone-label, .city-label, .country-label{
+    font-size: 15px;
+    font-weight: 450;
+    font-family: "Poppins";
+    letter-spacing: 0.01rem;
+    color: black;
+    padding-left: 20px;
+}
+
+
+.username-box, .email-box, .phone-box, .city-box, .country-box{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 20px;
+    width: 100%;
+}
+
+
+.account-name, .email-name, .phone-number, .city-name, .country-name{
+    width: 80%;
+    font-size: 15px;
+    font-weight: 450;
+    font-family: "Poppins";
+    letter-spacing: 0.01rem;
+    color: white;
+    background: none;
+    padding: 2px 20px;
+    border: none;
+}
+
+.account-name:focus{
+    outline: none;
+}
+
+.email-name:focus{
+    outline: none;
+}
+
+.phone-number:focus{
+    outline: none;
+}
+
+.city-name:focus{
+    outline: none;
+}
+
+.country-name:focus{
+    outline: none;
+}
+
+.character-limit{
+    text-align: end;
+    font-size: 14px;
+    font-weight: 450;
+    font-family: "Poppins";
+    letter-spacing: 0.01rem;
+    color: white;
+}
+
+
+.logout-container{
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 20px;
+    width: 100%;
+    padding: 10px 20px;
+    border-bottom: 1px solid white;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    font-size: 15px;
+    font-weight: 450;
+    font-family: "Poppins";
+    letter-spacing: 0.01rem;
+    color: white;
+}
+
+
+.logout-container:hover{
+    cursor: pointer;
+}
+
+.back-button{
+    margin: 10px 20px;
+    width: 100px;
+    height: 40px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 450;
+    font-family: "Poppins";
+    color: black
+}
+
+.back-button:hover{
+    background-color: var(--clicked-chatbox-color);
+    color: var(--white-font-color);
+    cursor: pointer;
+}

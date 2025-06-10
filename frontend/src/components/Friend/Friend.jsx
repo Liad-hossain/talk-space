@@ -51,7 +51,7 @@ const Friend = (props) => {
     return (
         <div className='friend' key={props.inbox_id} onClick={handleInboxClick} style={{backgroundColor: props.inbox_id === props.inboxId ? "var(--clicked-chatbox-color)" : undefined}}>
             <div className="friend-image-container">
-                <img src={Profile} alt="My Profile" width={50} height={50} className='friend-profile'/>
+                <img src={props.profile_photo || Profile} alt="My Profile" width={50} height={50} className='friend-profile'/>
                 {props.is_active ? <div className="active-status"></div> : (get_last_active_time() != null) && <div className="inactive-status">{get_last_active_time()}</div>}
             </div>
             <div className="content">

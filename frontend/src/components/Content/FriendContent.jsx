@@ -8,7 +8,7 @@ const FriendContent = (props) => {
     return (
         <div className='friend-content' key={props.id}>
             <div className="friend-conversation-image-container">
-                <img src={Profile} alt="Friend Profile" className='friend-photo'/>
+                <img src={props.sender_profile_photo || Profile} alt="Friend Profile" className='friend-photo'/>
                 {props.sender_status === "active" && <div className="friend-active-status"></div>}
             </div>
             <div className="friend-message-box">

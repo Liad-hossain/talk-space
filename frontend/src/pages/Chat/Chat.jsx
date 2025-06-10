@@ -8,11 +8,11 @@ import GroupIconImage from '../../assets/images/group.png';
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import config from '../../externals/config';
 import { selectedStates } from '../../const';
-import { toast } from 'react-toastify';
 import GroupCreation from '../../components/GroupCreation/GroupCreation';
+import Account from '../../components/Account/Account';
+import config from '../../externals/config';
+import handleHTTPRequest from '../../httpclient';
 
 
 function useDebounce(value, delay) {
@@ -48,40 +48,14 @@ const Chat = () => {
 
     const [isActive, setIsActive] = useState(false);
     const [lastActiveTime, setLastActiveTime] = useState(null);
+    const [isOpenAccount, setIsOpenAccount] = useState(false);
+    const [profileData, setProfileData] = useState({});
 
 
     const location = useLocation();
     const navigate = useNavigate();
-    const {user_id, username} = location.state || {};
+    let {user_id, username} = location.state || {};
 
-    useEffect(() => {
-        if(!user_id){
-            navigate('/')
-        }
-    })
-
-    const logout = async() => {
-        try {
-            const headers = {
-                'Authorization': `Token ${localStorage.getItem('access_token')}`
-            }
-            const response = await axios.post(config.auth.logout(), null, {headers});
-            if (response.status === 200) {
-                localStorage.clear();
-                toast.success("Logged out successfully");
-                navigate('/')
-            }
-            else{
-                toast.error("Error Response but logged out");
-                localStorage.clear();
-                navigate('/')
-            }
-        } catch (error) {
-            toast.error("Error Response but logged out");
-            localStorage.clear();
-            navigate('/')
-        }
-    }
 
     const handleClick = async(state) => {
         if(currentState === state){
@@ -101,6 +75,37 @@ const Chat = () => {
     const handleSearchChange = (e) => {
         setSearchText(e.target.value);
     }
+
+    const handleProfileClick = () => {
+        setIsOpenAccount(true);
+        setInboxId(null);
+    }
+
+    const get_user_profile = async() => {
+        try{
+            const response = await handleHTTPRequest('GET', config.auth.get_profile(user_id), {}, null, null);
+            if (response.status !== 200){
+                console.log("Error: ", response.data);
+                localStorage.clear();
+                navigate("/")
+            }
+            else{
+                setProfileData(response.data.dataSource);
+            }
+        }catch(error){
+            console.log("Error: ", error);
+            localStorage.clear();
+            navigate("/")
+        }
+    }
+
+    useEffect(() => {
+        if(!user_id){
+            navigate('/')
+        }
+
+        get_user_profile();
+    }, [isOpenAccount]);
 
 
     const args = {
@@ -136,11 +141,15 @@ const Chat = () => {
                 isCreateGroup &&
                 <GroupCreation setIsCreateGroup={setIsCreateGroup} user_id={user_id}/>
             }
+            {
+                isOpenAccount &&
+                <Account setIsOpenAccount={setIsOpenAccount} user_id={user_id}/>
+            }
             <div className="chat-left">
                 <div className="chat-left-top">
                     <div className="topmost">
-                        <img src={ProfileIcon} alt="Profile LOGO" width={30} height={30} className='profile-icon'/>
-                        <span className='username'>{username}</span>
+                        <img src={profileData.profile_photo || ProfileIcon} alt="Profile LOGO" width={30} height={30} className='profile-icon' onClick={handleProfileClick}/>
+                        <span className='username'>{profileData.username}</span>
                         <div className="custom-tooltip-container">
                             <img src={ChatIcon} alt="Chat LOGO" width={30} height={30} className='chat-icon' onClick={() => handleClick(selectedStates.CHATS)} style={{boxShadow: currentState === selectedStates.CHATS ? "0 2px 0 #FAF9F6" : undefined}}/>
                             <span className="custom-tooltip">Chats</span>
@@ -149,7 +158,6 @@ const Chat = () => {
                             <img src={GroupIconImage} alt="Group Logo" width={30} height={30} className='group-button' onClick={handleCreateGroupClick}/>
                             <span className="custom-tooltip">Create New Group</span>
                         </div>
-                        <span className="logout" onClick={logout}>Logout</span>
                     </div>
                     <div className='search'>
                         <img src={SearchIcon} alt="Search LOGO" width={30} height={30} className='search-icon'/>

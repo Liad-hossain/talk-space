@@ -55,6 +55,7 @@ def get_chats(user_id: int, offset: int = 0, limit: int = 20, **kwargs) -> list[
 
             receiver_id = None
             receiver_nickname = None
+            receiver_photo = None
             members = list()
             user_id_list = list()
             for member in inbox_members:
@@ -70,7 +71,8 @@ def get_chats(user_id: int, offset: int = 0, limit: int = 20, **kwargs) -> list[
                 )
                 if member.user_id != user_id:
                     receiver_id = member.user_id
-                    receiver_nickname = member.nickname
+                    receiver_name = member.user.username
+                    receiver_photo = member.user.userinfo.profile_photo
                     user_id_list.append(member.user_id)
 
             inbox_data = inbox.__dict__
@@ -81,14 +83,16 @@ def get_chats(user_id: int, offset: int = 0, limit: int = 20, **kwargs) -> list[
             if not inbox.is_group and receiver_id:
                 user = User.objects.filter(id=receiver_id).only("id", "username").first()
                 if user:
-                    inbox_data["inbox_name"] = receiver_nickname
+                    inbox_data["inbox_name"] = receiver_name
                     inbox_data["is_active"] = user.userinfo.status == UserStatus.ACTIVE
                     inbox_data["last_active_time"] = user.userinfo.last_active_time
+                    inbox_data["profile_photo"] = receiver_photo
 
             if inbox.is_group:
                 inbox_data["inbox_name"] = inbox.inbox_name
                 active_count = User.objects.filter(id__in=user_id_list, userinfo__status=UserStatus.ACTIVE).count()
                 inbox_data["is_active"] = active_count > 0
+                inbox_data["profile_photo"] = inbox.profile_photo
 
             serializer = ChatSerializer(data=inbox_data)
             if not serializer.is_valid():
@@ -143,6 +147,7 @@ def get_conversations(inbox_id: int, offset: int = 0, limit: int = 20, **kwargs)
             conversation_data = message.__dict__
             conversation_data["sender_name"] = message.sender.username
             conversation_data["sender_status"] = message.sender.userinfo.status
+            conversation_data["sender_profile_photo"] = message.sender.userinfo.profile_photo
             conversation_data["message_id"] = conversation_data.pop("id")
             conversation_data["attachments"] = attachments
             serializer = ConversationSerializer(data=conversation_data)
@@ -275,7 +280,7 @@ def get_groups(user_id: int, offset: int = 0, limit: int = 20, **kwargs) -> list
             query &= Q(inbox_name__icontains=search)
         groups_qs = (
             Inbox.objects.filter(query)
-            .only("id", "inbox_name")
+            .only("id", "inbox_name", "profile_photo")
             .order_by("-last_message_timestamp")[offset : offset + limit]
         )
 
