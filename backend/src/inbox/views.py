@@ -12,6 +12,10 @@ from .services import (
     send_message,
     create_group,
     send_group_message,
+    get_group_details,
+    update_group_details,
+    add_members,
+    exit_group,
 )
 from externals.redis_utils import publish_message_to_channel
 from helpers.const import RedisChannelNames
@@ -97,11 +101,44 @@ def send_group_message_view(request: Request, *args, **kwargs) -> Response:
 def publish_inbox_event_view(request: Request, *args, **kwargs):
     logger.info("Entered publish inbox event view.")
     body = request.data
-    if body.get("data"):
-        body["data"]["inbox_id"] = kwargs.get("inbox_id", 0)
+    if not body.get("data"):
+        body["data"] = {}
+    body["data"]["inbox_id"] = kwargs.get("inbox_id")
 
     is_success = publish_message_to_channel(channel_name=RedisChannelNames.INBOX_EVENT, message=body)
     if is_success:
         logger.info("Inbox event published successfully.")
 
     return Response(data={"success": is_success}, status=200)
+
+
+@api_view(["GET"])
+@permission_classes((IsAuthenticated,))
+def get_group_details_view(request: Request, *args, **kwargs) -> Response:
+    logger.info("Entered get group details view.")
+    data = get_group_details(inbox_id=kwargs.get("inbox_id"))
+    return Response(data={"success": True, "dataSource": data}, status=200)
+
+
+@api_view(["POST"])
+@permission_classes((IsAuthenticated,))
+def update_group_details_view(request: Request, *args, **kwargs) -> Response:
+    logger.info("Entered update group details view.")
+    data = update_group_details(inbox_id=kwargs.get("inbox_id"), data=request.data)
+    return Response(data={"success": True, "dataSource": data}, status=200)
+
+
+@api_view(["POST"])
+@permission_classes((IsAuthenticated,))
+def add_members_view(request: Request, *args, **kwargs) -> Response:
+    logger.info("Entered add members view.")
+    data = add_members(inbox_id=kwargs.get("inbox_id", 0), user_ids=request.query_params.get("user_ids", []))
+    return Response(data={"success": True, "dataSource": data}, status=200)
+
+
+@api_view(["POST"])
+@permission_classes((IsAuthenticated,))
+def exit_group_view(request: Request, *args, **kwargs) -> Response:
+    logger.info("Entered exit group view.")
+    data = exit_group(inbox_id=kwargs.get("inbox_id"), user_id=kwargs.get("user_id"))
+    return Response(data={"success": True, "dataSource": data}, status=200)

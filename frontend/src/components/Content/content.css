@@ -15,11 +15,9 @@
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    gap: 5px;
-    padding: 5px 25px;
-    border-top-left-radius: 45px;
-    border-bottom-left-radius: 45px;
-    border-top-right-radius: 45px;
+    border-top-left-radius: 25px;
+    border-bottom-left-radius: 25px;
+    border-top-right-radius: 25px;
     border-bottom-right-radius: 5px;
     width: fit-content;
     min-width: 200px;
@@ -33,6 +31,15 @@
     font-family: 'Poppins';
     line-height: 1.5rem;
     font-weight: 450;
+    padding: 10px 25px;
+}
+
+
+.my-attachment{
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 10px;
 }
 
 .my-time{
@@ -41,6 +48,7 @@
     font-family: 'Poppins';
     line-height: 1.5rem;
     font-weight: 450;
+    padding: 5px 25px;
 }
 
 .my-photo{
@@ -77,19 +85,15 @@
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    gap: 5px;
-    padding: 5px 25px;
-    border-top-left-radius: 45px;
+    border-top-left-radius: 25px;
     border-bottom-left-radius: 5px;
-    border-top-right-radius: 45px;
-    border-bottom-right-radius: 45px;
+    border-top-right-radius: 25px;
+    border-bottom-right-radius: 25px;
     width: fit-content;
     min-width: 200px;
     max-width: 500px;
     color: white;
 }
-
-
 
 
 .friend-message{
@@ -98,7 +102,16 @@
     font-family: 'Poppins';
     line-height: 1.5rem;
     font-weight: 450;
+    padding: 5px 25px;
 }
+
+.friend-attachment{
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 10px;
+}
+
 
 .friend-time{
     align-self: flex-end;
@@ -106,6 +119,7 @@
     font-family: 'Poppins';
     line-height: 1.5rem;
     font-weight: 450;
+    padding: 5px 25px;
 }
 
 .friend-conversation-image-container{

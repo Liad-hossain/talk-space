@@ -185,6 +185,9 @@ const ChatList = (props) => {
             }
             else{
                 props.setFriendList(response.data.dataSource);
+                if(inboxIdRef.current === null) return;
+                props.setIsActive(response.data.dataSource.filter(friend => friend.inbox_id === inboxIdRef.current)[0].is_active);
+                props.setLastActiveTime(response.data.dataSource.filter(friend => friend.inbox_id === inboxIdRef.current)[0].last_active_time);
             }
         }else{
             let url= ""
@@ -211,11 +214,32 @@ const ChatList = (props) => {
                 navigate("/")
             }
             else{
-                props.setFriendList([]);
                 props.setUserList(response.data.dataSource);
+                if(inboxIdRef.current === null) return;
+                props.setIsActive(response.data.dataSource.filter(friend => friend.inbox_id === inboxIdRef.current)[0].is_active);
+                props.setLastActiveTime(response.data.dataSource.filter(friend => friend.inbox_id === inboxIdRef.current)[0].last_active_time);
             }
         }
     }
+
+    const handleClearChatEvent = (data) => {
+        console.log("Chat list cleat chat event data: ",data)
+        if(props.currentState === selectedStates.CHATS){
+           props.setFriendList((prevList) => prevList.map(
+               (friend) =>
+                   friend.inbox_id === data.inbox_id
+                       ? { ...friend, last_message: "" }
+                       : friend
+           ));
+        }
+    };
+
+
+    const handleDeleteChatEvent = (data) => {
+        if(props.currentState === selectedStates.CHATS){
+            props.setFriendList((prevList) => prevList.filter(friend => friend.inbox_id !== data.inbox_id));
+        }
+    };
 
     useEffect(() => {
         inboxIdRef.current = props.inboxId;
@@ -265,6 +289,15 @@ const ChatList = (props) => {
         channel.bind('inbox', (data) => {
             updateFriend(data);
         });
+
+        channel.bind('clear_chat', (data) => {
+            handleClearChatEvent(data);
+        });
+
+
+        channel.bind('delete_chat', (data) => {
+            handleDeleteChatEvent(data);
+        })
 
         const intervalId =setInterval(() => {
             fetchData();

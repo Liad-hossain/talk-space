@@ -3,20 +3,23 @@ import ProfileIcon from '../../assets/icons/profile_avatar.svg';
 import './User.css';
 import handleHTTPRequest from '../../httpclient';
 import config from '../../externals/config';
+import { InboxEvents } from '../../const';
+import { selectedStates } from '../../const';
 
 
 const User = (props) => {
     const handleUserClick = async() => {
         props.setInboxId(props.inbox_id);
         props.setInboxName(props.inbox_name || props.username);
-        props.setSelectedId(props.inbox_id || props.id);
+        props.setInboxImage(props.profile_photo ? props.profile_photo : ProfileIcon);
         props.setMembers(props.inbox_members);
         props.setIsGroup(props.is_group);
+        props.setSelectedId(props.currentState === selectedStates.GROUPS ? props.inbox_id : props.id);
         props.setIsActive(props.is_active);
         props.setLastActiveTime(props.last_active_time);
 
         const body = {
-            event: "seen",
+            event: InboxEvents.SEEN,
             data: {
                 user_id: props.user_id,
             }
@@ -44,8 +47,8 @@ const User = (props) => {
         return null
     }
 
+    const myId = props.currentState === selectedStates.GROUPS ? props.inbox_id : props.id;
 
-    const myId = props.inbox_id || props.id;
     return (
         <div className='user-selected' key={myId} onClick={handleUserClick} style={{backgroundColor: myId === props.selectedId ? "var(--clicked-chatbox-color)" : undefined}}>
             <div className="inbox-profile-container">

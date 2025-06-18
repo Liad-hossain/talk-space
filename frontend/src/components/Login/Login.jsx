@@ -28,7 +28,7 @@ const Login = (props) => {
                 localStorage.setItem('refresh_token', response.data.dataSource.refresh_token);
 
                 toast.success('Logged in successfully!!');
-                navigate('/chat', {state: {user_id: response.data.dataSource.id, username: response.data.dataSource.username}});
+                navigate('/chat', {state: {user_id: response.data.dataSource.id}});
             }
             else{
                 toast.error(response?.data.error || "Login failed");

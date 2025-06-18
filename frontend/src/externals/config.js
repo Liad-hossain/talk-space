@@ -19,6 +19,10 @@ const config = {
         send_message: (receiver_id) => `${TALKSPACE_BACKEND_BASE_URL}/api/inbox/${receiver_id}/send-message`,
         send_group_message: (inbox_id) => `${TALKSPACE_BACKEND_BASE_URL}/api/inbox/${inbox_id}/send-group-message`,
         send_inbox_event: (inbox_id) => `${TALKSPACE_BACKEND_BASE_URL}/api/inbox/${inbox_id}/publish-event`,
+        get_group_details: (inbox_id) => `${TALKSPACE_BACKEND_BASE_URL}/api/inbox/${inbox_id}/get-group-details`,
+        update_group_details: (inbox_id) => `${TALKSPACE_BACKEND_BASE_URL}/api/inbox/${inbox_id}/update-group-details`,
+        add_members: (inbox_id) => `${TALKSPACE_BACKEND_BASE_URL}/api/inbox/${inbox_id}/add-members`,
+        exit_group: (inbox_id, user_id) => `${TALKSPACE_BACKEND_BASE_URL}/api/inbox/${inbox_id}/exit-group/${user_id}`,
     }
 }
 

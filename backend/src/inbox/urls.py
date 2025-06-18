@@ -13,4 +13,8 @@ urlpatterns = [
     path("<int:receiver_id>/send-message", views.send_message_view, name="send_message"),
     path("<int:inbox_id>/send-group-message", views.send_group_message_view, name="send_group_message"),
     path("<int:inbox_id>/publish-event", views.publish_inbox_event_view, name="publish_inbox_event"),
+    path("<int:inbox_id>/get-group-details", views.get_group_details_view, name="get_group_details"),
+    path("<int:inbox_id>/update-group-details", views.update_group_details_view, name="update_group"),
+    path("<int:inbox_id>/add-members", views.add_members_view, name="add_members"),
+    path("<int:inbox_id>/exit-group/<int:user_id>", views.exit_group_view, name="exit_group"),
 ]

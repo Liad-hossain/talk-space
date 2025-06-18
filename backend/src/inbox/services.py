@@ -10,14 +10,16 @@ from .serializers import (
     GroupSerializer,
     GroupCreationSerializer,
     GroupMessageSerializer,
+    GroupDetailsSerializer,
 )
 from helpers.custom_exception import DRFViewException, convert_exception_string_to_one_line
 from rest_framework import status
 from django.db.models import Q, F, Count, OuterRef, Subquery, IntegerField, QuerySet
 from externals.pusher import trigger_pusher
-from helpers.const import UserStatus, InboxEvents
+from helpers.const import UserStatus, InboxEvents, Others
 from datetime import datetime, timezone
 from rest_framework.exceptions import APIException
+from helpers.utils import upload_image_to_cloudinary
 
 
 logger = logging.getLogger("stdout")
@@ -54,8 +56,9 @@ def get_chats(user_id: int, offset: int = 0, limit: int = 20, **kwargs) -> list[
             )
 
             receiver_id = None
-            receiver_nickname = None
+            receiver_name = None
             receiver_photo = None
+            last_message_sender_name = None
             members = list()
             user_id_list = list()
             for member in inbox_members:
@@ -63,10 +66,13 @@ def get_chats(user_id: int, offset: int = 0, limit: int = 20, **kwargs) -> list[
                     {
                         "user_id": member.user_id,
                         "nickname": member.nickname,
+                        "username": member.user.username,
+                        "profile_photo": member.user.userinfo.profile_photo,
                         "role": member.role,
                         "is_blocked": member.is_blocked,
                         "is_archived": member.is_archived,
                         "is_muted": member.is_muted,
+                        "created_at": member.created_at,
                     }
                 )
                 if member.user_id != user_id:
@@ -75,10 +81,22 @@ def get_chats(user_id: int, offset: int = 0, limit: int = 20, **kwargs) -> list[
                     receiver_photo = member.user.userinfo.profile_photo
                     user_id_list.append(member.user_id)
 
+            last_message_sender_name = (
+                ""
+                if not inbox.last_message_sender
+                else member.user.first_name
+                if inbox.last_message_sender == receiver_id
+                else "You"
+            )
+
             inbox_data = inbox.__dict__
             inbox_data["inbox_id"] = inbox_data.pop("id")
             inbox_data["inbox_members"] = members
             inbox_data["unseen_count"] = inbox_data["unseen_count"] if inbox_data["unseen_count"] else 0
+            if inbox.last_message:
+                inbox_data["last_message"] = (
+                    last_message_sender_name + ("" if not last_message_sender_name else ": ") + inbox.last_message
+                )
 
             if not inbox.is_group and receiver_id:
                 user = User.objects.filter(id=receiver_id).only("id", "username").first()
@@ -133,23 +151,17 @@ def get_conversations(inbox_id: int, offset: int = 0, limit: int = 20, **kwargs)
         ]
 
         for message in messages:
-            attachments = list()
+            attachment = ""
             if message.has_attachment:
-                attachments = list(
-                    Attachment.objects.filter(message_id=message.id,).values(
-                        "file_name",
-                        "file_type",
-                        "file_url",
-                        "is_deleted",
-                    )
-                )
+                attachment = Attachment.objects.filter(message_id=message.id, is_deleted=False).only("file_url").first()
+                attachment = attachment.file_url if attachment else ""
 
             conversation_data = message.__dict__
             conversation_data["sender_name"] = message.sender.username
             conversation_data["sender_status"] = message.sender.userinfo.status
             conversation_data["sender_profile_photo"] = message.sender.userinfo.profile_photo
             conversation_data["message_id"] = conversation_data.pop("id")
-            conversation_data["attachments"] = attachments
+            conversation_data["attachment"] = attachment
             serializer = ConversationSerializer(data=conversation_data)
             if not serializer.is_valid():
                 logger.error(
@@ -200,22 +212,52 @@ def get_users(user_id: int, is_active: bool | None = None, offset: int = 0, limi
                 profile_photo=F("userinfo__profile_photo"),
                 status=F("userinfo__status"),
                 last_active_time=F("userinfo__last_active_time"),
+                created_at=F("userinfo__created_at"),
             )
-            .values("id", "username", "first_name", "last_name", "profile_photo", "status", "last_active_time")
+            .values(
+                "id", "username", "first_name", "last_name", "profile_photo", "status", "last_active_time", "created_at"
+            )
             .order_by("-userinfo__created_at")[offset : offset + limit]
         )
 
+        myself = (
+            User.objects.filter(id=user_id)
+            .annotate(
+                profile_photo=F("userinfo__profile_photo"),
+                status=F("userinfo__status"),
+                last_active_time=F("userinfo__last_active_time"),
+                created_at=F("userinfo__created_at"),
+            )
+            .values(
+                "id", "username", "first_name", "last_name", "profile_photo", "status", "last_active_time", "created_at"
+            )
+            .first()
+        )
+
+        my_object = {
+            "user_id": myself["id"],
+            "nickname": "",
+            "username": myself["username"],
+            "profile_photo": myself["profile_photo"],
+            "role": "user",
+            "created_at": myself["created_at"],
+        }
+
         for user in users_qs:
             inbox = (
-                Inbox.objects.filter(
-                    inboxmember__user_id__in=[user_id, user["id"]],
+                Inbox.objects.annotate(
+                    user_count=Count("inboxmember__user_id", distinct=True),
                 )
-                .only(
-                    "id",
+                .filter(
+                    user_count=2,
+                    inboxmember__user_id__in=[user["id"], user_id],
                 )
-                .annotate(user_count=Count("inboxmember__user_id"))
-                .filter(user_count=2)
+                .annotate(
+                    final_user_count=Count("inboxmember__user_id", distinct=True),
+                )
+                .filter(final_user_count=2)
             )
+
             members = list()
             if inbox.exists():
                 inbox_members = InboxMember.objects.filter(
@@ -225,18 +267,28 @@ def get_users(user_id: int, is_active: bool | None = None, offset: int = 0, limi
                     members.append(
                         {
                             "user_id": member.user_id,
+                            "nickname": member.nickname,
+                            "username": member.user.username,
+                            "profile_photo": member.user.userinfo.profile_photo,
                             "role": member.role,
+                            "created_at": member.created_at,
                             "is_blocked": member.is_blocked,
+                            "is_archived": member.is_archived,
+                            "is_muted": member.is_muted,
                         }
                     )
             else:
                 members.append(
                     {
                         "user_id": user["id"],
+                        "nickname": "",
+                        "username": user["username"],
+                        "profile_photo": user["profile_photo"],
                         "role": "user",
-                        "is_blocked": False,
+                        "created_at": user["created_at"],
                     }
                 )
+                members.append(my_object)
 
             user["inbox_members"] = members
             user["inbox_id"] = inbox[0].id if inbox.exists() else 0
@@ -294,8 +346,14 @@ def get_groups(user_id: int, offset: int = 0, limit: int = 20, **kwargs) -> list
                 members.append(
                     {
                         "user_id": member.user_id,
+                        "nickname": member.nickname,
+                        "username": member.user.username,
+                        "profile_photo": member.user.userinfo.profile_photo,
                         "role": member.role,
                         "is_blocked": member.is_blocked,
+                        "is_archived": member.is_archived,
+                        "is_muted": member.is_muted,
+                        "created_at": member.created_at,
                     }
                 )
                 if member.user_id != user_id:
@@ -338,7 +396,7 @@ def create_group(user_id: int, data: dict, **kwargs) -> bool:
     try:
         serializer = GroupCreationSerializer(data=data)
         if not serializer.is_valid():
-            message = "Could not validate the data provided by the user for creating group."
+            message = f"Could not validate the data provided by the user for creating group.Data: {data}"
             logger.error(msg={"message": message, "error": serializer.errors})
             raise DRFViewException(
                 detail="The data provided is not valid.",
@@ -385,7 +443,7 @@ def send_message(receiver_id: int, data: dict, **kwargs) -> bool:
     try:
         serializer = MessageSerializer(data=data)
         if not serializer.is_valid():
-            message = "Could not validate the data provided by the user for sending message."
+            message = f"Could not validate the data provided by the user for sending message. Data: {data}"
             logger.error(msg={"message": message, "error": serializer.errors})
             raise DRFViewException(
                 detail="The data provided is not valid.",
@@ -406,26 +464,32 @@ def send_message(receiver_id: int, data: dict, **kwargs) -> bool:
 
         current_timestamp = int(datetime.now(timezone.utc).timestamp())
         inbox = (
-            Inbox.objects.filter(
+            Inbox.objects.annotate(
+                user_count=Count("inboxmember__user_id", distinct=True),
+            )
+            .filter(
+                user_count=2,
                 inboxmember__user_id__in=[serializer.validated_data.get("sender_id", 0), receiver_id],
             )
-            .only(
-                "id",
+            .annotate(
+                final_user_count=Count("inboxmember__user_id", distinct=True),
             )
-            .annotate(user_count=Count("inboxmember__user_id"))
-            .filter(user_count=2)
+            .filter(final_user_count=2)
+            .only("id")
         )
 
-        last_message = serializer.validated_data.get("text", "")[:20]
-        if len(serializer.validated_data.get("text", "")) > 20:
+        last_message = serializer.validated_data.get("text", "")[: Others.LAST_MESSAGE_LENGTH]
+        if len(serializer.validated_data.get("text", "")) > Others.LAST_MESSAGE_LENGTH:
             last_message += "..."
+
+        attachment = serializer.validated_data.get("attachment", None)
+        if attachment:
+            last_message = "📸 photo"
 
         if not inbox.exists():
             inbox = Inbox.objects.create(
                 inbox_name="",
                 is_group=False,
-                is_archived=False,
-                is_muted=False,
                 last_message=last_message,
                 last_message_sender=serializer.validated_data.get("sender_id", 0),
                 last_message_timestamp=current_timestamp,
@@ -454,7 +518,7 @@ def send_message(receiver_id: int, data: dict, **kwargs) -> bool:
             inbox_id=inbox.first().id if isinstance(inbox, QuerySet) else inbox.id,
             sender_id=serializer.validated_data.get("sender_id", 0),
             text=serializer.validated_data.get("text", ""),
-            has_attachment=(len(serializer.validated_data.get("attachments", [])) > 0),
+            has_attachment=(serializer.validated_data.get("attachment", None) is not None),
         )
 
         message_status = MessageStatus.objects.create(
@@ -463,6 +527,17 @@ def send_message(receiver_id: int, data: dict, **kwargs) -> bool:
             is_queued=True,
         )
 
+        file_url = ""
+        if attachment:
+            file_url = upload_image_to_cloudinary(attachment)
+            Attachment.objects.create(
+                message=message,
+                file_name=attachment.name,
+                file_type=attachment.content_type,
+                file_size=attachment.size,
+                file_url=file_url,
+            )
+
         try:
             # Inbox Event for the left side chatbox
             response = trigger_pusher(
@@ -470,8 +545,8 @@ def send_message(receiver_id: int, data: dict, **kwargs) -> bool:
                 event="inbox",
                 data={
                     "inbox_id": inbox.first().id if isinstance(inbox, QuerySet) else inbox.id,
-                    "sender_id": serializer.validated_data.get("sender_id", 0),
-                    "message": last_message,
+                    "sender_id": sender.id,
+                    "message": sender.first_name + ": " + last_message,
                     "timestamp": serializer.validated_data.get("timestamp", current_timestamp),
                 },
             )
@@ -488,10 +563,13 @@ def send_message(receiver_id: int, data: dict, **kwargs) -> bool:
                 data={
                     "inbox_id": inbox.first().id if isinstance(inbox, QuerySet) else inbox.id,
                     "message_id": message.id,
-                    "sender_id": serializer.validated_data.get("sender_id", 0),
+                    "sender_id": sender.id,
+                    "sender_name": sender.username,
+                    "sender_status": sender.userinfo.status,
+                    "sender_profile_photo": sender.userinfo.profile_photo,
                     "text": serializer.validated_data.get("text", ""),
                     "has_attachment": message.has_attachment,
-                    "attachments": [],
+                    "attachment": file_url,
                     "created_at": message.created_at.isoformat(),
                     "updated_at": message.updated_at.isoformat(),
                 },
@@ -534,7 +612,7 @@ def send_group_message(inbox_id: int, data: dict, **kwargs) -> bool:
     try:
         serializer = GroupMessageSerializer(data=data)
         if not serializer.is_valid():
-            message = "Could not validate the data provided by the user for sending group message."
+            message = f"Could not validate the data provided by the user for sending group message. Data: {data}"
             logger.error(msg={"message": message, "error": serializer.errors})
             raise DRFViewException(
                 detail="The data provided is not valid.",
@@ -554,9 +632,13 @@ def send_group_message(inbox_id: int, data: dict, **kwargs) -> bool:
             inbox = inbox.first()
 
         current_timestamp = int(datetime.now(timezone.utc).timestamp())
-        last_message = serializer.validated_data.get("text", "")[:20]
-        if len(serializer.validated_data.get("text", "")) > 20:
+        last_message = serializer.validated_data.get("text", "")[: Others.LAST_MESSAGE_LENGTH]
+        if len(serializer.validated_data.get("text", "")) > Others.LAST_MESSAGE_LENGTH:
             last_message += "..."
+
+        attachment = serializer.validated_data.get("attachment", None)
+        if attachment:
+            last_message = "📸 Photo"
 
         inbox.last_message = last_message
         inbox.last_message_sender = serializer.validated_data.get("sender_id", 0)
@@ -567,8 +649,21 @@ def send_group_message(inbox_id: int, data: dict, **kwargs) -> bool:
             inbox_id=inbox.id,
             sender_id=serializer.validated_data.get("sender_id", 0),
             text=serializer.validated_data.get("text", ""),
-            has_attachment=(len(serializer.validated_data.get("attachments", [])) > 0),
+            has_attachment=(serializer.validated_data.get("attachment", None) is not None),
         )
+
+        attachment = serializer.validated_data.get("attachment", None)
+        file_url = ""
+        if attachment:
+            file_url = upload_image_to_cloudinary(attachment)
+            if file_url:
+                Attachment.objects.create(
+                    message_id=message.id,
+                    file_name=attachment.name,
+                    file_type=attachment.content_type,
+                    file_size=attachment.size,
+                    file_url=file_url,
+                )
 
         members = InboxMember.objects.filter(inbox_id=inbox_id).only("user_id")
         for member in members:
@@ -590,7 +685,7 @@ def send_group_message(inbox_id: int, data: dict, **kwargs) -> bool:
                     data={
                         "inbox_id": inbox.id,
                         "sender_id": serializer.validated_data.get("sender_id", 0),
-                        "message": last_message,
+                        "message": sender.first_name + ": " + last_message,
                         "timestamp": serializer.validated_data.get("timestamp", current_timestamp),
                     },
                 )
@@ -607,12 +702,13 @@ def send_group_message(inbox_id: int, data: dict, **kwargs) -> bool:
                     data={
                         "inbox_id": inbox.id,
                         "message_id": message.id,
-                        "sender_id": serializer.validated_data.get("sender_id", 0),
-                        "sender_name": message.sender.username,
-                        "sender_status": message.sender.userinfo.status,
+                        "sender_id": sender.id,
+                        "sender_name": sender.username,
+                        "sender_status": sender.userinfo.status,
+                        "sender_profile_photo": sender.userinfo.profile_photo,
                         "text": serializer.validated_data.get("text", ""),
                         "has_attachment": message.has_attachment,
-                        "attachments": [],
+                        "attachment": file_url,
                         "created_at": message.created_at.isoformat(),
                         "updated_at": message.updated_at.isoformat(),
                     },
@@ -664,7 +760,7 @@ def process_seen_event(data: dict) -> bool:
     return True
 
 
-def process_delete_event(data: dict) -> bool:
+def process_delete_message_event(data: dict) -> bool:
     message_id = data.get("message_id", 0)
     inbox_id = data.get("inbox_id", 0)
     if message_id:
@@ -726,6 +822,93 @@ def process_unmute_event(data: dict) -> bool:
     return True
 
 
+def process_clear_chat_event(data: dict) -> bool:
+    logger.info(f"Starting to clear chat event for data: {data}")
+
+    inbox_id = data.get("inbox_id", 0)
+    user_id = data.get("user_id", 0)
+
+    if not inbox_id or not user_id:
+        raise DRFViewException(
+            detail="Inbox id and user id both are required.", status_code=status.HTTP_400_BAD_REQUEST
+        )
+
+    inbox = Inbox.objects.filter(id=inbox_id)
+    if not inbox.exists():
+        raise DRFViewException(detail="Inbox not found.", status_code=status.HTTP_404_NOT_FOUND)
+
+    inbox = inbox.first()
+    Attachment.objects.filter(message__inbox_id=inbox_id).delete()
+    Message.objects.filter(inbox_id=inbox_id).delete()
+
+    inbox.last_message = ""
+    inbox.save(update_fields=["last_message"])
+
+    member_ids = InboxMember.objects.filter(inbox_id=inbox_id).values_list("user_id", flat=True)
+
+    try:
+        for member_id in member_ids:
+            if member_id == user_id:
+                continue
+            trigger_pusher(
+                [f"inbox_{member_id}", f"message_{member_id}"], InboxEvents.CLEAR_CHAT, {"inbox_id": inbox_id}
+            )
+            logger.info(f"Successfully sent clear chat event to member id: {member_id} via pusher.")
+    except Exception:
+        logger.error(
+            {
+                "message": "Couldn't send clear chat event via pusher.",
+                "error": convert_exception_string_to_one_line(traceback.format_exc()),
+            }
+        )
+
+    logger.info(f"Successfully completed clear chat event for data: {data}")
+    return True
+
+
+def process_delete_chat_event(data: dict) -> bool:
+    logger.info(f"Starting delete chat event for data: {data}")
+
+    inbox_id = data.get("inbox_id", 0)
+    user_id = data.get("user_id", 0)
+
+    if not inbox_id or not user_id:
+        raise DRFViewException(
+            detail="Inbox id and user id both are required.", status_code=status.HTTP_400_BAD_REQUEST
+        )
+
+    inbox = Inbox.objects.filter(id=inbox_id)
+    if not inbox.exists():
+        raise DRFViewException(detail="Inbox not found.", status_code=status.HTTP_404_NOT_FOUND)
+
+    inbox = inbox.first()
+    Attachment.objects.filter(message__inbox_id=inbox_id).delete()
+    Message.objects.filter(inbox_id=inbox_id).delete()
+    member_ids = InboxMember.objects.filter(inbox_id=inbox_id).values_list("user_id", flat=True)
+
+    try:
+        for member_id in member_ids:
+            if member_id == user_id:
+                continue
+            trigger_pusher(
+                [f"inbox_{member_id}", f"message_{member_id}"], InboxEvents.DELETE_CHAT, {"inbox_id": inbox_id}
+            )
+            logger.info(f"Successfully sent delete chat event to member id: {member_id} via pusher.")
+    except Exception:
+        logger.error(
+            {
+                "message": "Couldn't send delete chat event via pusher.",
+                "error": convert_exception_string_to_one_line(traceback.format_exc()),
+            }
+        )
+
+    InboxMember.objects.filter(inbox_id=inbox_id).delete()
+    inbox.delete()
+
+    logger.info(f"Successfully completed delete chat event for data: {data}")
+    return True
+
+
 def process_inbox_event(data: dict) -> bool:
     logger.info(f"Starting inbox event process using data: {data} ....")
     try:
@@ -739,8 +922,14 @@ def process_inbox_event(data: dict) -> bool:
         if event == InboxEvents.SEEN:
             is_success = process_seen_event(data)
 
-        elif event == InboxEvents.DELETE:
-            is_success = process_delete_event(data)
+        elif event == InboxEvents.DELETE_MESSAGE:
+            is_success = process_delete_message_event(data)
+
+        elif event == InboxEvents.CLEAR_CHAT:
+            is_success = process_clear_chat_event(data)
+
+        elif event == InboxEvents.DELETE_CHAT:
+            is_success = process_delete_chat_event(data)
 
         elif event == InboxEvents.ARCHIVE:
             is_success = process_archive_event(data)
@@ -769,3 +958,90 @@ def process_inbox_event(data: dict) -> bool:
 
     logger.info("Ending inbox event process....")
     return is_success
+
+
+def get_group_details(inbox_id: int) -> dict:
+    logger.info("Starting to get group details for inbox id: ", inbox_id)
+
+    inbox = Inbox.objects.filter(id=inbox_id)
+    if not inbox.exists():
+        raise DRFViewException(detail="Group not found.", status_code=status.HTTP_404_NOT_FOUND)
+
+    inbox = inbox.first()
+    inbox_members = InboxMember.objects.filter(inbox_id=inbox_id)
+    inbox_data = inbox.__dict__
+    inbox_data["group_photo"] = inbox_data.pop("profile_photo")
+    members = list()
+    for member in inbox_members:
+        members.append(
+            {
+                "user_id": member.user_id,
+                "nickname": member.nickname,
+                "username": member.userinfo.username,
+                "profile_photo": member.userinfo.profile_photo,
+                "role": member.role,
+                "created_at": member.created_at,
+            }
+        )
+    inbox_data["members"] = members
+
+    serializer = GroupDetailsSerializer(inbox_data)
+    if not serializer.is_valid():
+        raise DRFViewException(detail="Something went wrong.", status_code=status.HTTP_400_BAD_REQUEST)
+
+    logger.info("Successfully found group details for inbox id: ", inbox_id)
+    return serializer.data
+
+
+def update_group_details(inbox_id: int, data: dict) -> bool:
+    logger.info("Starting to update group details for inbox id: ", inbox_id)
+
+    inbox = Inbox.objects.filter(id=inbox_id)
+    if not inbox.exists():
+        raise DRFViewException(detail="Group not found.", status_code=status.HTTP_404_NOT_FOUND)
+
+    inbox = inbox.first()
+    inbox.inbox_name = data.get("inbox_name", inbox.inbox_name)
+    if data.get("group_photo", None):
+        inbox.profile_photo = upload_image_to_cloudinary(data.get("group_photo"))
+
+    inbox.save(update_fields=["inbox_name", "profile_photo"])
+
+    logger.info("Successfully updated group details for inbox id: ", inbox_id)
+    return True
+
+
+def add_members(inbox_id: int, user_ids: list) -> bool:
+    logger.info("Starting to add member to group for inbox id: ", inbox_id)
+
+    inbox = Inbox.objects.filter(id=inbox_id)
+    if not inbox.exists():
+        raise DRFViewException(detail="Group not found.", status_code=status.HTTP_404_NOT_FOUND)
+
+    inbox = inbox.first()
+    inbox_members = list()
+    for user_id in user_ids:
+        user = User.objects.filter(id=user_id)
+        if not user.exists():
+            raise DRFViewException(detail="User not found.", status_code=status.HTTP_404_NOT_FOUND)
+
+        user = user.first()
+        inbox_members.append(InboxMember(inbox=inbox, user_id=user_id, nickname=user.username, role="user"))
+
+    InboxMember.objects.bulk_create(inbox_members)
+    logger.info("Successfully added member to group for inbox id: ", inbox_id)
+    return True
+
+
+def exit_group(user_id: int, inbox_id: int) -> bool:
+    logger.info(f"Starting to exit group for user id: {user_id} and inbox id: {inbox_id}")
+
+    inbox = Inbox.objects.filter(id=inbox_id)
+    if not inbox.exists():
+        raise DRFViewException(detail="Group not found.", status_code=status.HTTP_404_NOT_FOUND)
+
+    inbox = inbox.first()
+    InboxMember.objects.filter(inbox_id=inbox_id, user_id=user_id).delete()
+
+    logger.info(f"Successfully exited group for user id: {user_id} and inbox id: {inbox_id}")
+    return True

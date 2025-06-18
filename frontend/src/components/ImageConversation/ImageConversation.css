@@ -1,0 +1,88 @@
+.image-sending-overlay{
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent black */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Higher than everything else */
+}
+
+
+.image-seding-container{
+  background-color:  #FFFFF5;
+  padding: 2rem;
+  border-radius: 15px;
+  width: 40%;
+  height: 70vh;
+  overflow: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  position: relative;
+  display: grid;
+  grid-template-rows: auto auto;
+  gap: 20px;
+  align-items: space-between;
+}
+
+.selected-image-container{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+}
+
+.selected-image{
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 10px;
+}
+
+
+.image-conversation-btns{
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 20px;
+}
+
+
+.image-cancel-button{
+    border: none;
+    border-radius: 10px;
+    padding: 5px 10px;
+    background: var(--light-dark-color);
+    color: white;
+    font-size: 15px;
+    font-weight: 550;
+    font-family: "Poppins";
+    cursor: pointer;
+    opacity: 0.85;
+}
+
+.image-cancel-button:hover{
+    opacity: 1;
+    cursor: pointer;
+}
+
+
+.image-send-button{
+    border: none;
+    border-radius: 10px;
+    padding: 5px 10px;
+    background: var(--green-button-color);
+    color: white;
+    font-size: 15px;
+    font-weight: 550;
+    font-family: "Poppins";
+    opacity: 0.75;
+}
+
+
+.image-send-button:hover{
+    opacity: 1;
+    cursor: pointer;
+}

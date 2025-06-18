@@ -13,6 +13,7 @@ import GroupCreation from '../../components/GroupCreation/GroupCreation';
 import Account from '../../components/Account/Account';
 import config from '../../externals/config';
 import handleHTTPRequest from '../../httpclient';
+import ContactDetails from '../../components/UserDetails/UserDetails';
 
 
 function useDebounce(value, delay) {
@@ -33,7 +34,9 @@ function useDebounce(value, delay) {
 
 const Chat = () => {
     const [inboxId, setInboxId] = useState(null);
+    const [receiver_id, setReceiverId] = useState(null);
     const [inboxName, setInboxName] = useState("");
+    const [inboxImage, setInboxImage] = useState(ProfileIcon);
     const [currentState, setCurrentState] = useState(selectedStates.CHATS);
     const [members, setMembers] = useState([]);
 
@@ -51,10 +54,13 @@ const Chat = () => {
     const [isOpenAccount, setIsOpenAccount] = useState(false);
     const [profileData, setProfileData] = useState({});
 
+    const [isUserDetailsClicked, setIsUserDetailsClicked] = useState(false);
+    const [isGroupDetailsClicked, setIsGroupDetailsClicked] = useState(false);
+
 
     const location = useLocation();
     const navigate = useNavigate();
-    let {user_id, username} = location.state || {};
+    let {user_id} = location.state || {};
 
 
     const handleClick = async(state) => {
@@ -79,6 +85,7 @@ const Chat = () => {
     const handleProfileClick = () => {
         setIsOpenAccount(true);
         setInboxId(null);
+        setIsUserDetailsClicked(false);
     }
 
     const get_user_profile = async() => {
@@ -113,6 +120,8 @@ const Chat = () => {
         setInboxId: setInboxId,
         inboxName: inboxName,
         setInboxName: setInboxName,
+        inboxImage: inboxImage,
+        setInboxImage: setInboxImage,
         user_id: user_id,
         members: members,
         setMembers: setMembers,
@@ -132,8 +141,16 @@ const Chat = () => {
         setIsActive: setIsActive,
         lastActiveTime: lastActiveTime,
         setLastActiveTime: setLastActiveTime,
+        receiver_id: receiver_id,
+        setReceiverId: setReceiverId,
     }
 
+    const extraArgs = {
+        isUserDetailsClicked: isUserDetailsClicked,
+        setIsUserDetailsClicked: setIsUserDetailsClicked,
+        isGroupDetailsClicked: isGroupDetailsClicked,
+        setIsGroupDetailsClicked: setIsGroupDetailsClicked,
+    }
 
     return (
         <div className='chat'>
@@ -174,8 +191,13 @@ const Chat = () => {
                     <ChatList {...args}/>
                 </div>
             </div>
+            <div className="chat-middle">
+                {inboxId == null ? <div className="default-chat-bg"></div> : <Conversation {...args} {...extraArgs}/>}
+            </div>
             <div className="chat-right">
-                {inboxId == null ? <div className="default-chat-bg"></div> : <Conversation {...args}/>}
+                {
+                    isUserDetailsClicked && <ContactDetails receiver_id={receiver_id} setIsUserDetailsClicked={setIsUserDetailsClicked}/>
+                }
             </div>
         </div>
     );

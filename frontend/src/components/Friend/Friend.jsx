@@ -4,6 +4,7 @@ import '../../index.css'
 import { convertTimestampToShowTime } from '../../utils';
 import handleHTTPRequest from '../../httpclient';
 import config from '../../externals/config';
+import { InboxEvents } from '../../const';
 
 
 const Friend = (props) => {
@@ -11,14 +12,16 @@ const Friend = (props) => {
     const handleInboxClick = async() => {
         props.setInboxId(props.inbox_id);
         props.setInboxName(props.inbox_name);
+        props.setInboxImage(props.profile_photo ? props.profile_photo : Profile);
         props.setMembers(props.inbox_members);
         props.setIsGroup(props.is_group);
         props.setIsActive(props.is_active);
         props.setLastActiveTime(props.last_active_time);
+        props.setReceiverId(props.inbox_members.filter(member => member.user_id !== props.user_id).map(member => member.user_id)[0]);
 
         if(props.unseen_count > 0){
             const body = {
-                event: "seen",
+                event: InboxEvents.SEEN,
                 data: {
                     user_id: props.user_id,
                 }

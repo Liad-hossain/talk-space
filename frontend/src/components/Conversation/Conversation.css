@@ -31,6 +31,7 @@
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid white;
+  cursor: pointer;
 }
 
 .conversation-active-status{
@@ -52,12 +53,14 @@
   align-items: flex-start;
 }
 
+
 .user-name {
   font-size: 25px;
   font-family: "Poppins";
   font-weight: 600;
   color: white;
 }
+
 
 .user-status-text {
   font-size: 15px;
@@ -66,9 +69,22 @@
   color: white;
 }
 
+.three-dots-container{
+  position: relative;
+}
+
+
 .three-dots-icon {
   cursor: pointer;
+  margin-right: 20px;
 }
+
+
+.three-dots-icon:hover{
+  background-color: var(--hover-bg-color);
+  border-radius: 50%;
+}
+
 
 .conversation-bottom {
   background-color: var(--conversation-bg-color);
@@ -76,6 +92,7 @@
   border-top-right-radius: 60px;
   height: 90vh;
 }
+
 
 .conversation-content {
   display: flex;
@@ -86,9 +103,11 @@
   scrollbar-width: none;
 }
 
+
 .conversation-scroll{
   gap: 10px;
 }
+
 
 .send-box {
   background: white;
@@ -102,6 +121,7 @@
   padding: 20px;
 }
 
+
 .text-input {
   width: 90%;
   border: none;
@@ -111,14 +131,29 @@
   font-weight: 450;
 }
 
+
 .send-icon-button {
+  background: none;
+  border: none;
+  padding: 0;
+  padding-right: 10px;
+}
+
+
+.send-icon-button:hover{
+  cursor: pointer;
+  transform: scale(1.2);
+  transition: transform 0.2s ease-in-out;
+}
+
+.plus-icon-button{
   background: none;
   border: none;
   padding: 0;
 }
 
-.send-icon-button:hover{
+.plus-icon-button:hover{
   cursor: pointer;
-  transform: scale(1.3);
-  transition: transform 0.3s ease-in-out;
+  transform: scale(1.2);
+  transition: transform 0.2s ease-in-out;
 }

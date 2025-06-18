@@ -8,7 +8,9 @@ class UserStatus:
 
 class InboxEvents:
     SEEN = "seen"
-    DELETE = "delete"
+    DELETE_MESSAGE = "delete_message"
+    DELETE_CHAT = "delete_chat"
+    CLEAR_CHAT = "clear_chat"
     MUTE = "mute"
     UNMUTE = "unmute"
     ARCHIVE = "archive"
@@ -24,3 +26,7 @@ class UserEvents:
 class RedisChannelNames:
     INBOX_EVENT = "inbox_event"
     USER_EVENT = "user_event"
+
+
+class Others:
+    LAST_MESSAGE_LENGTH = 15
