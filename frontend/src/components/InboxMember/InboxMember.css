@@ -1,0 +1,19 @@
+@import '../../index.css';
+
+
+.inbox-member-container{
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 30px;
+    padding: 10px 10px;
+}
+
+.inbox-member-container:hover{
+    cursor: pointer;
+    background-color: var(--hover-bg-color);
+}
+
+.inbox-member-image{
+    border-radius: 50%;
+}

@@ -13,7 +13,8 @@ import GroupCreation from '../../components/GroupCreation/GroupCreation';
 import Account from '../../components/Account/Account';
 import config from '../../externals/config';
 import handleHTTPRequest from '../../httpclient';
-import ContactDetails from '../../components/UserDetails/UserDetails';
+import UserDetails from '../../components/UserDetails/UserDetails';
+import GroupDetails from '../../components/GroupDetails/GroupDetails';
 
 
 function useDebounce(value, delay) {
@@ -115,6 +116,13 @@ const Chat = () => {
     }, [isOpenAccount]);
 
 
+
+    useEffect(() =>{
+        setIsUserDetailsClicked(false);
+        setIsGroupDetailsClicked(false);
+    }, [inboxId, currentState]);
+
+
     const args = {
         inboxId:inboxId,
         setInboxId: setInboxId,
@@ -152,6 +160,20 @@ const Chat = () => {
         setIsGroupDetailsClicked: setIsGroupDetailsClicked,
     }
 
+    const groupDetailsArgs = {
+        inboxId: inboxId,
+        setInboxId: setInboxId,
+        user_id: user_id,
+        setInboxImage: setInboxImage,
+        setInboxName: setInboxName,
+        setIsGroupDetailsClicked: setIsGroupDetailsClicked,
+        setIsUserDetailsClicked: setIsUserDetailsClicked,
+        setReceiverId: setReceiverId,
+        setUserList: setUserList,
+        setFriendList: setFriendList,
+        currentState: currentState,
+    }
+
     return (
         <div className='chat'>
             {
@@ -181,10 +203,10 @@ const Chat = () => {
                         <input type='search' placeholder='Search' className='user-search' value={searchText} onChange={handleSearchChange}/>
                     </div>
                     <div className="filter-user">
-                        <span onClick={() => handleClick(selectedStates.ALL_USERS)} style={{textDecoration: currentState === selectedStates.ALL_USERS ? "underline" : undefined, ...(currentState === selectedStates.ALL_USERS && {textDecorationThickness: "2px",textUnderlineOffset: "4px"})}}>All Users</span>
-                        <span onClick={() => handleClick(selectedStates.ACTIVE_USERS)} style={{textDecoration: currentState === selectedStates.ACTIVE_USERS ? "underline" : undefined, ...(currentState === selectedStates.ALL_USERS && {textDecorationThickness: "2px",textUnderlineOffset: "4px"})}}>Active Users</span>
-                        <span onClick={() => handleClick(selectedStates.INACTIVE_USERS)} style={{textDecoration: currentState === selectedStates.INACTIVE_USERS ? "underline" : undefined, ...(currentState === selectedStates.ALL_USERS && {textDecorationThickness: "2px",textUnderlineOffset: "4px"})}}>Inactive Users</span>
-                        <span onClick={() => handleClick(selectedStates.GROUPS)} style={{textDecoration: currentState === selectedStates.GROUPS ? "underline" : undefined, ...(currentState === selectedStates.ALL_USERS && {textDecorationThickness: "2px",textUnderlineOffset: "4px"})}}>Groups</span>
+                        <span onClick={() => handleClick(selectedStates.ALL_USERS)} style={{textDecoration: currentState === selectedStates.ALL_USERS ? "underline" : undefined, ...(currentState === selectedStates.ALL_USERS && {textDecorationThickness: "2px",textUnderlineOffset: "5px"})}}>All Users</span>
+                        <span onClick={() => handleClick(selectedStates.ACTIVE_USERS)} style={{textDecoration: currentState === selectedStates.ACTIVE_USERS ? "underline" : undefined, ...(currentState === selectedStates.ACTIVE_USERS && {textDecorationThickness: "2px",textUnderlineOffset: "5px"})}}>Active Users</span>
+                        <span onClick={() => handleClick(selectedStates.INACTIVE_USERS)} style={{textDecoration: currentState === selectedStates.INACTIVE_USERS ? "underline" : undefined, ...(currentState === selectedStates.INACTIVE_USERS && {textDecorationThickness: "2px",textUnderlineOffset: "5px"})}}>Inactive Users</span>
+                        <span onClick={() => handleClick(selectedStates.GROUPS)} style={{textDecoration: currentState === selectedStates.GROUPS ? "underline" : undefined, ...(currentState === selectedStates.GROUPS && {textDecorationThickness: "2px",textUnderlineOffset: "5px"})}}>Groups</span>
                     </div>
                 </div>
                 <div className="chat-left-bottom">
@@ -196,7 +218,10 @@ const Chat = () => {
             </div>
             <div className="chat-right">
                 {
-                    isUserDetailsClicked && <ContactDetails receiver_id={receiver_id} setIsUserDetailsClicked={setIsUserDetailsClicked}/>
+                    isUserDetailsClicked && <UserDetails receiver_id={receiver_id} setIsUserDetailsClicked={setIsUserDetailsClicked}/>
+                }
+                {
+                    isGroupDetailsClicked && <GroupDetails {...groupDetailsArgs}/>
                 }
             </div>
         </div>

@@ -85,12 +85,13 @@ class GroupSerializer(serializers.Serializer):
 class GroupDetailsSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=True)
     inbox_name = serializers.CharField(required=True, max_length=255)
-    group_photo = serializers.CharField(required=False, allow_blank=True, default="")
+    group_photo = serializers.CharField(required=False, allow_blank=True, allow_null=True, default="")
     created_at = serializers.DateTimeField(required=True)
     created_by = serializers.IntegerField(required=True)
     inbox_members = serializers.ListField(child=InboxMemberSerializer(), required=True)
+    total_members = serializers.IntegerField(required=True)
 
 
 class GroupCreationSerializer(serializers.Serializer):
     inbox_name = serializers.CharField(required=True, max_length=255)
-    inbox_members = serializers.ListField(child=InboxMemberSerializer(), required=True)
+    inbox_members = serializers.ListField(child=serializers.IntegerField(), required=True)

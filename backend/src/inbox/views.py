@@ -14,7 +14,7 @@ from .services import (
     send_group_message,
     get_group_details,
     update_group_details,
-    add_members,
+    add_member,
     exit_group,
 )
 from externals.redis_utils import publish_message_to_channel
@@ -130,9 +130,9 @@ def update_group_details_view(request: Request, *args, **kwargs) -> Response:
 
 @api_view(["POST"])
 @permission_classes((IsAuthenticated,))
-def add_members_view(request: Request, *args, **kwargs) -> Response:
+def add_member_view(request: Request, *args, **kwargs) -> Response:
     logger.info("Entered add members view.")
-    data = add_members(inbox_id=kwargs.get("inbox_id", 0), user_ids=request.query_params.get("user_ids", []))
+    data = add_member(inbox_id=kwargs.get("inbox_id", 0), user_ids=request.GET.getlist("user_ids", []))
     return Response(data={"success": True, "dataSource": data}, status=200)
 
 

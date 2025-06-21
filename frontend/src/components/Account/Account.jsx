@@ -1,5 +1,5 @@
 import './Account.css';
-import AddProfileImage from '../../assets/images/add_profile_image.jpg';
+import AddIcon from '../../assets/images/add_icon.jpg';
 import Edit from '../../assets/images/edit.png';
 import Check from '../../assets/images/check.png';
 import Logout from '../../assets/images/logout.jpg';
@@ -129,6 +129,7 @@ const Account = (props) => {
                 setIsEditingPhoneNumber(false);
                 setIsEditingCity(false);
                 setIsEditingCountry(false);
+                nameInputRef.current.style.borderBottom = "none";
                 get_profile_data();
                 toast.success("Profile updated successfully");
             }else{
@@ -207,8 +208,8 @@ const Account = (props) => {
                     accept="image/*"
                     style={{ display: 'none' }}
                 />
-                <img src={profilePhoto || selectedImage || AddProfileImage} alt="" className="add-img-icon" width={80} height={80} onClick={handleImageClick}/>
-                <span className='add-image-text'>{selectedImageFile || profilePhoto ? "Change Profile Photo" : "Add Profile Photo"}</span>
+                <img src={profilePhoto || selectedImage || AddIcon} alt="" className="add-img-icon" width={80} height={80} onClick={handleImageClick}/>
+                <span className='add-image-text'>{selectedImageFile || profilePhoto ? "Change Profile Photo" : "Choose Profile Photo"}</span>
                 {selectedImage && <button className='profile-save-btn' onClick={handlePhotoSaveClick}>Save</button>}
             </div>
             <div className="account-name-container">

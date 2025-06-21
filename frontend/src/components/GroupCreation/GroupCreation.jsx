@@ -34,12 +34,12 @@ const GroupCreation = (props) => {
     const [selectedMembers, setSelectedMembers] = useState([]);
     const debouncedSearchText = useDebounce(searchText, 500);
     const [hasMore, setHasMore] = useState(true);
-    const [groupName, setGroupName] = useState('');
+    const [groupCreationName, setGroupCreationName] = useState('');
 
     const navigate = useNavigate();
 
-    const handleGroupNameChange = (e) => {
-        setGroupName(e.target.value);
+    const handleGroupCreationNameChange = (e) => {
+        setGroupCreationName(e.target.value);
     }
 
     const handleSearchChange = (e) => {
@@ -97,13 +97,13 @@ const GroupCreation = (props) => {
 
 
     const handleCreateGroup = async() => {
-        if(!groupName || selectedMembers.length < 2){
+        if(!groupCreationName || selectedMembers.length < 2){
             return;
         }
 
         const url = config.inbox.create_group(props.user_id);
         const data = {
-            inbox_name: groupName,
+            inbox_name: groupCreationName,
             inbox_members: selectedMembers.map(member => member.id),
         }
         try{
@@ -111,10 +111,9 @@ const GroupCreation = (props) => {
             if(response.status === 200){
                 props.setIsCreateGroup(false);
                 setSelectedMembers([]);
-                setSelectedMembers([]);
                 setSuggestedUser([]);
-                toast.success(`Group: ${groupName} created successfully`);
-                setGroupName('');
+                toast.success(`Group: ${groupCreationName} created successfully`);
+                setGroupCreationName('');
             }else{
                 console.log("Error: ",response.data);
                 localStorage.clear();
@@ -135,7 +134,7 @@ const GroupCreation = (props) => {
     return (
         <div className="group-creation-overlay">
             <div className='group-creation-container'>
-                <input type="text" placeholder="Group Name" className="group-name" value={groupName} onChange={handleGroupNameChange}/>
+                <input type="text" placeholder="Group Name" className="group-creation-name" value={groupCreationName} onChange={handleGroupCreationNameChange}/>
                 <div className='suggested-search'>
                     <img src={SearchIcon} alt="Search LOGO" width={25} height={25} className='search-icon'/>
                     <input type='search' placeholder='Search' className='suggested-user-search' value={searchText} onChange={handleSearchChange}/>
@@ -165,7 +164,7 @@ const GroupCreation = (props) => {
                 </div>
                 <div className="button-container">
                     <button className='cancel-button' onClick={handleCancelClick}>Cancel</button>
-                    <button className='create-button' onClick={handleCreateGroup} style={{background: selectedMembers.length < 2 || !groupName ? "white" : undefined, color: selectedMembers.length < 2 || !groupName ? "black" : undefined, cursor: selectedMembers.length < 2 || !groupName ? "not-allowed" : undefined}}>Create</button>
+                    <button className='create-button' onClick={handleCreateGroup} style={{background: selectedMembers.length < 2 || !groupCreationName ? "white" : undefined, color: selectedMembers.length < 2 || !groupCreationName ? "black" : undefined, cursor: selectedMembers.length < 2 || !groupCreationName ? "not-allowed" : undefined}}>Create</button>
                 </div>
             </div>
         </div>

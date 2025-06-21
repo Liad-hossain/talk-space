@@ -60,10 +60,24 @@
   letter-spacing: 0.02rem;
 }
 
+.inbox-name-container{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
 .inbox-name {
   font-size: 15px;
   font-family: "Poppins";
   font-weight: 400;
+  margin-left: 10px;
+}
+
+.already-added{
+  font-size: 10px;
+  font-family: "Poppins";
+  font-weight: 350;
+  color: var(--light-dark-color);
   margin-left: 10px;
 }
 

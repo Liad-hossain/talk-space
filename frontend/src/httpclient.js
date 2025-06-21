@@ -1,5 +1,7 @@
 import axios from "axios";
 import config from "./externals/config";
+import qs from 'qs';
+
 
 const handleTokenRefresh = async (refresh_token) => {
     const data = {
@@ -14,6 +16,7 @@ const handleTokenRefresh = async (refresh_token) => {
         return response;
     } catch (error) {
         console.error('Error:', error);
+        window.location.href = '/'
     }
 };
 
@@ -29,6 +32,9 @@ const handleHTTPRequest = async (method, url, headers, params, data) => {
             url: url,
             headers: headers,
             params: params,
+            paramsSerializer: (params) => {
+                return qs.stringify(params, { arrayFormat: 'repeat' });
+            },
             data: data
         });
 

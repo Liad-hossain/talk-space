@@ -14,7 +14,7 @@ const GroupMember = (props) => {
         <div className='group-member'>
             <div className="member-img-container">
                 <div className="cross-button" onClick={handleCrossButton}>⨯</div>
-                <img src={ProfileIcon} alt="" className="group-member-img" />
+                <img src={props.profile_photo || ProfileIcon} alt="" className="group-member-img" />
                 {props.is_active  &&  <div className="active-status-suggestion"></div>}
             </div>
             <span className='group-member-name'>{props.first_name}</span>

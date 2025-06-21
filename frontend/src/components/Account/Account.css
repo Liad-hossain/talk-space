@@ -4,8 +4,8 @@
     position: fixed;
     top: 0;
     left: 0;
-    right: 75vw;
-    bottom: 0;
+    width: 430px;
+    height: 100vh;
     background-color: var(--chat-search-bg-color);
     display: grid;
     grid-template-rows: 1fr 1fr 1fr 1fr 1fr;

@@ -977,15 +977,19 @@ def get_group_details(inbox_id: int) -> dict:
             {
                 "user_id": member.user_id,
                 "nickname": member.nickname,
-                "username": member.userinfo.username,
-                "profile_photo": member.userinfo.profile_photo,
+                "username": member.user.username,
+                "profile_photo": member.user.userinfo.profile_photo,
                 "role": member.role,
                 "created_at": member.created_at,
+                "is_blocked": member.is_blocked,
+                "is_archived": member.is_archived,
+                "is_muted": member.is_muted,
             }
         )
-    inbox_data["members"] = members
+    inbox_data["inbox_members"] = members
+    inbox_data["total_members"] = len(members)
 
-    serializer = GroupDetailsSerializer(inbox_data)
+    serializer = GroupDetailsSerializer(data=inbox_data)
     if not serializer.is_valid():
         raise DRFViewException(detail="Something went wrong.", status_code=status.HTTP_400_BAD_REQUEST)
 
@@ -1011,7 +1015,7 @@ def update_group_details(inbox_id: int, data: dict) -> bool:
     return True
 
 
-def add_members(inbox_id: int, user_ids: list) -> bool:
+def add_member(inbox_id: int, user_ids: list) -> bool:
     logger.info("Starting to add member to group for inbox id: ", inbox_id)
 
     inbox = Inbox.objects.filter(id=inbox_id)
@@ -1021,9 +1025,16 @@ def add_members(inbox_id: int, user_ids: list) -> bool:
     inbox = inbox.first()
     inbox_members = list()
     for user_id in user_ids:
+        user_id = int(user_id)
         user = User.objects.filter(id=user_id)
         if not user.exists():
-            raise DRFViewException(detail="User not found.", status_code=status.HTTP_404_NOT_FOUND)
+            raise DRFViewException(detail=f"User with id: {user_id} not found.", status_code=status.HTTP_404_NOT_FOUND)
+
+        inbox_user = InboxMember.objects.filter(inbox_id=inbox_id, user_id=user_id)
+        if inbox_user.exists():
+            raise DRFViewException(
+                detail=f"User with id: {user_id} already exists in group.", status_code=status.HTTP_400_BAD_REQUEST
+            )
 
         user = user.first()
         inbox_members.append(InboxMember(inbox=inbox, user_id=user_id, nickname=user.username, role="user"))
@@ -1039,6 +1050,12 @@ def exit_group(user_id: int, inbox_id: int) -> bool:
     inbox = Inbox.objects.filter(id=inbox_id)
     if not inbox.exists():
         raise DRFViewException(detail="Group not found.", status_code=status.HTTP_404_NOT_FOUND)
+
+    inbox_user = InboxMember.objects.filter(inbox_id=inbox_id, user_id=user_id)
+    if not inbox_user.exists():
+        raise DRFViewException(
+            detail=f"User with id: {user_id} doesn't exist in the group.", status_code=status.HTTP_404_NOT_FOUND
+        )
 
     inbox = inbox.first()
     InboxMember.objects.filter(inbox_id=inbox_id, user_id=user_id).delete()

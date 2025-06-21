@@ -133,7 +133,7 @@ const Conversation = (props) => {
     }
 
 
-    const updateConversations = async(newConversation, toPublishEvent = true) => {
+    const addConversations = async(newConversation, toPublishEvent = true) => {
         if(!newConversation || newConversation.inbox_id !== inboxIdRef.current){
             return;
         }
@@ -223,7 +223,7 @@ const Conversation = (props) => {
                 "created_at": new Date().toISOString(),
                 "updated_at": new Date().toISOString(),
             }
-            updateConversations(newConversation, false);
+            addConversations(newConversation, false);
 
             let response = null
             if(!props.isGroup){
@@ -339,6 +339,7 @@ const Conversation = (props) => {
         getConversations(props.inboxId,false);
         props.setIsGroupDetailsClicked(false);
         props.setIsUserDetailsClicked(false);
+        props.setIsGroupDetailsClicked(false);
 
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -351,7 +352,7 @@ const Conversation = (props) => {
             return;
         }
         messageChannel.bind('message', (data) => {
-            updateConversations(data);
+            addConversations(data);
         });
 
         messageChannel.bind('clear_chat', (data) => {

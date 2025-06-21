@@ -13,7 +13,7 @@ const User = (props) => {
         props.setInboxName(props.inbox_name || props.username);
         props.setInboxImage(props.profile_photo ? props.profile_photo : ProfileIcon);
         props.setMembers(props.inbox_members);
-        props.setIsGroup(props.is_group);
+        props.setIsGroup(props.currentState === selectedStates.GROUPS ? true : false);
         props.setSelectedId(props.currentState === selectedStates.GROUPS ? props.inbox_id : props.id);
         props.setIsActive(props.is_active);
         props.setLastActiveTime(props.last_active_time);
