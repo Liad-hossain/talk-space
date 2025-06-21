@@ -16,6 +16,7 @@ import InfiniteScroll from 'react-infinite-scroll-component';
 import { convertDatetimeToShowDate } from '../../utils';
 import ImageConversation from '../ImageConversation/ImageConversation';
 import UserMenuItems from '../UserMenuItems/UserMenuItems';
+import GroupMenuItems from '../GroupMenuItems/GroupMenuItems';
 import ClearChat from '../ClearChat/ClearChat';
 import { InboxEvents } from '../../const';
 import DeleteChat from '../DeleteChat/DeleteChat';
@@ -377,9 +378,11 @@ const Conversation = (props) => {
     const userMenuArgs = {
         setOpenMenu: setOpenMenu,
         setIsUserDetailsClicked: props.setIsUserDetailsClicked,
+        setIsGroupDetailsClicked: props.setIsGroupDetailsClicked,
         receiver_id: props.receiver_id,
         setIsClearChat: setIsClearChat,
         setIsDeleteChat: setIsDeleteChat,
+        setIsExitGroup: props.setIsExitGroup,
         currentState: props.currentState,
     }
 
@@ -424,6 +427,10 @@ const Conversation = (props) => {
                     {
                         openMenu && !props.isGroup &&
                         <UserMenuItems {...userMenuArgs}/>
+                    }
+                    {
+                        openMenu && props.isGroup &&
+                        <GroupMenuItems {...userMenuArgs}/>
                     }
                 </div>
             </div>

@@ -1,0 +1,80 @@
+@import '../../index.css';
+
+
+
+.exit-group-overlay{
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent black */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Higher than everything else */
+}
+
+
+.exit-group-container{
+    background-color:  #FFFFF5;
+    padding: 2rem;
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.exit-group-header{
+    font-size: 25px;
+    font-weight: 500;
+    font-family: "Poppins";
+    letter-spacing: 0.01rem;
+}
+
+.exit-group-desc{
+    font-size: 15px;
+    font-weight: 400;
+    font-family: "Poppins";
+    letter-spacing: 0.01rem;
+}
+
+.exit-button-container{
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 15px;
+}
+
+.exit-group-cancel{
+    border: 0.5px solid var(--light-dark-color);
+    border-radius: 15px;
+    padding: 5px 10px;
+    background: var(--light-dark-color);
+    color: white;
+    font-size: 15px;
+    font-weight: 400;
+    font-family: "Poppins";
+    cursor: pointer;
+}
+
+.exit-group-cancel:hover{
+    box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.25);
+}
+
+
+.exit-group-confirm{
+    border: 0.5px solid var(--light-dark-color);
+    border-radius: 15px;
+    padding: 5px 15px;
+    background: var(--green-button-color);
+    color: white;
+    font-size: 15px;
+    font-weight: 400;
+    font-family: "Poppins";
+    cursor: pointer;
+}
+
+.exit-group-confirm:hover{
+    box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.25);
+}

@@ -15,6 +15,8 @@ import config from '../../externals/config';
 import handleHTTPRequest from '../../httpclient';
 import UserDetails from '../../components/UserDetails/UserDetails';
 import GroupDetails from '../../components/GroupDetails/GroupDetails';
+import ExitGroup from '../../components/ExitGroup/ExitGroup';
+
 
 
 function useDebounce(value, delay) {
@@ -57,6 +59,7 @@ const Chat = () => {
 
     const [isUserDetailsClicked, setIsUserDetailsClicked] = useState(false);
     const [isGroupDetailsClicked, setIsGroupDetailsClicked] = useState(false);
+    const [isExitGroup, setIsExitGroup] = useState(false);
 
 
     const location = useLocation();
@@ -158,6 +161,7 @@ const Chat = () => {
         setIsUserDetailsClicked: setIsUserDetailsClicked,
         isGroupDetailsClicked: isGroupDetailsClicked,
         setIsGroupDetailsClicked: setIsGroupDetailsClicked,
+        setIsExitGroup: setIsExitGroup,
     }
 
     const groupDetailsArgs = {
@@ -168,6 +172,7 @@ const Chat = () => {
         setInboxName: setInboxName,
         setIsGroupDetailsClicked: setIsGroupDetailsClicked,
         setIsUserDetailsClicked: setIsUserDetailsClicked,
+        setIsExitGroup: setIsExitGroup,
         setReceiverId: setReceiverId,
         setUserList: setUserList,
         setFriendList: setFriendList,
@@ -183,6 +188,10 @@ const Chat = () => {
             {
                 isOpenAccount &&
                 <Account setIsOpenAccount={setIsOpenAccount} user_id={user_id}/>
+            }
+            {
+                isExitGroup &&
+                <ExitGroup {...groupDetailsArgs}/>
             }
             <div className="chat-left">
                 <div className="chat-left-top">

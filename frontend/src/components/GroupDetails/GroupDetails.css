@@ -142,7 +142,7 @@
     background-color: var(--hover-bg-color);
 }
 
-.exit-group-container{
+.exit-group-button-container{
     display: flex;
     align-items: center;
     justify-content: flex-start;
@@ -158,7 +158,7 @@
     letter-spacing: 0.01rem;
 }
 
-.exit-group-container:hover{
+.exit-group-button-container:hover{
     cursor: pointer;
     background-color: var(--hover-bg-color);
 }

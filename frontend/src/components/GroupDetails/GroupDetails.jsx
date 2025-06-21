@@ -12,7 +12,6 @@ import InboxMember from "../InboxMember/InboxMember";
 import Exit from '../../assets/images/exit.png';
 import AddMember from "../AddMember/AddMember";
 import { selectedStates } from "../../const";
-import { Members } from "pusher-js";
 
 
 const MAX_LENGTH = 30;
@@ -140,28 +139,6 @@ const GroupDetails = (props) => {
     };
 
 
-    const handleExitGroupClick = async() => {
-        try{
-            const response = await handleHTTPRequest('POST', config.inbox.exit_group(props.inboxId, props.user_id), {}, null, {});
-            if(response.status === 200){
-                if(props.currentState === selectedStates.GROUPS){
-                    props.setUserList(previtems => previtems.filter(item => item.inbox_id !== props.inboxId));
-                }else{
-                    props.setFriendList(previtems => previtems.filter(item => item.inbox_id !== props.inboxId));
-                }
-                props.setIsGroupDetailsClicked(false);
-                props.setInboxId(null);
-                toast.success(`You have left the group: ${groupName}`);
-            }else{
-                console.log("Error: ", response.data);
-                toast.error("Couldn't exit group. Please try again.");
-            }
-        }catch(error){
-            console.log("Error: ", error);
-            toast.error("Couldn't exit group. Please try again.");
-        }
-    }
-
     useEffect(() => {
         fetch_group_details();
     }, [inboxMembers.length]);
@@ -213,9 +190,9 @@ const GroupDetails = (props) => {
                 <span className="add-members">Add Member</span>
             </div>
             {getInboxMemberComponents()}
-            <div className="exit-group-container">
+            <div className="exit-group-button-container">
                 <img src={Exit} alt="" className="exit-icon" width={20} height={20}/>
-                <span className="exit-group" onClick={handleExitGroupClick}>Exit Group</span>
+                <span className="exit-group" onClick={()=>props.setIsExitGroup(true)}>Exit Group</span>
             </div>
         </div>
     );
