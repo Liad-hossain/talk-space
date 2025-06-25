@@ -17,13 +17,7 @@ class Command(BaseCommand):
         self.redis_client = None
 
     def handle(self, *args, **options):
-        self.redis_client = redis.Redis(
-            host=getattr(settings, "GLOBAL_REDIS_HOST", "localhost"),
-            port=getattr(settings, "GLOBAL_REDIS_PORT", 6379),
-            db=getattr(settings, "GLOBAL_REDIS_DB", 0),
-            password=getattr(settings, "GLOBAL_REDIS_PASSWORD", None),
-            decode_responses=True,
-        )
+        self.redis_client = redis.from_url(settings.REDIS_HOST_URL)
 
         # Starting redis pubsub listener in a separate thread
         listener_thread = threading.Thread(
