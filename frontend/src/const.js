@@ -11,6 +11,12 @@ const selectedStates = {
     GROUPS: "groups",
 }
 
+const UserEvents = {
+    LOGIN: "login",
+    LOGOUT: "logout",
+    HEARTBEAT: "heartbeat",
+}
+
 const InboxEvents = {
     SEEN: "seen",
     DELETE_MESSAGE: "delete_message",
@@ -25,4 +31,4 @@ const PUSHER_APP_KEY = process.env.REACT_APP_PUSHER_APP_KEY
 const PUSHER_APP_CLUSTER = process.env.REACT_APP_PUSHER_APP_CLUSTER
 
 
-export {userStates, selectedStates, ENVIRONMENT, TALKSPACE_BACKEND_BASE_URL, PUSHER_APP_KEY, PUSHER_APP_CLUSTER, InboxEvents};
+export {userStates, selectedStates, ENVIRONMENT, TALKSPACE_BACKEND_BASE_URL, PUSHER_APP_KEY, PUSHER_APP_CLUSTER, InboxEvents, UserEvents};

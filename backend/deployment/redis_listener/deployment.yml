@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: live-redis-listener
+  labels:
+    app: redis-listener
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-listener
+  template:
+    metadata:
+      labels:
+        app: redis-listener
+    spec:
+      containers:
+        - name: app
+          image: IMAGE_PLACEHOLDER
+          imagePullPolicy: Always
+          resources:
+            limits:
+              cpu: "0.3"
+              memory: "128Mi"
+            requests:
+              cpu: "0.3"
+              memory: "128Mi"
+          command:
+            - "python ./src/manage.py start_redis_inbox_listener"

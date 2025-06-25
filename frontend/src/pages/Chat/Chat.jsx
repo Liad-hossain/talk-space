@@ -16,6 +16,7 @@ import handleHTTPRequest from '../../httpclient';
 import UserDetails from '../../components/UserDetails/UserDetails';
 import GroupDetails from '../../components/GroupDetails/GroupDetails';
 import ExitGroup from '../../components/ExitGroup/ExitGroup';
+import { UserEvents } from '../../const';
 
 
 
@@ -110,12 +111,34 @@ const Chat = () => {
         }
     }
 
+    const send_heartbeat = async() =>{
+        try{
+            const data = {
+                event: UserEvents.HEARTBEAT,
+                data: {
+                    user_id: user_id
+                }
+            }
+            await handleHTTPRequest('POST', config.auth.publish_event(), {}, null, data);
+
+        }catch(error){
+            console.log("Error: ", error);
+        }
+    };
+
     useEffect(() => {
         if(!user_id){
             navigate('/')
         }
 
         get_user_profile();
+
+        const intervalId =setInterval(() => {
+            send_heartbeat();
+        }, 30000);
+
+        return () => clearInterval(intervalId);
+
     }, [isOpenAccount]);
 
 

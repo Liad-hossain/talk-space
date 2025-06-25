@@ -1,7 +1,7 @@
 import logging
 import traceback
 from .models import Inbox, Message, InboxMember, MessageStatus, Attachment
-from accounts.models import User
+from django.contrib.auth.models import User
 from .serializers import (
     MessageSerializer,
     ChatSerializer,

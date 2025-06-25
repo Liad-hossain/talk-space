@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  labels:
+    app: talk-space-redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: talk-space-redis
+  template:
+    metadata:
+      labels:
+        app: talk-space-redis
+    spec:
+      containers:
+      - name: redis
+        image: bitnami/redis:6.2.5
+        ports:
+          - containerPort: 6379
+        env:
+        - name: REDIS_PASSWORD
+          value: "8765"
+        volumeMounts:
+        - name: redis-data
+          mountPath: /var/lib/redis/data
+      volumes:
+      - name: redis-data
+        persistentVolumeClaim:
+          claimName: redis-pvc

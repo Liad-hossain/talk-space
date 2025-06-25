@@ -1,5 +1,4 @@
 import logging
-import os
 from accounts.serializers import RegisterSerializer, UserSerializer, LoginSerializer
 from rest_framework import status
 from accounts.models import User, UserInfo
@@ -8,9 +7,10 @@ from helpers.custom_exception import DRFViewException
 from django.utils import timezone
 from helpers.const import UserEvents, RedisChannelNames
 from externals.redis_utils import publish_message_to_channel
-from datetime import datetime
+from datetime import datetime, timedelta
 from helpers.utils import upload_image_to_cloudinary
-from django.core.files.storage import default_storage
+from .tasks import task_update_user_last_active_time
+from django.conf import settings
 
 
 logger = logging.getLogger("stdout")
@@ -140,16 +140,30 @@ def disconnect_user(data: dict):
 def process_user_heartbeat(data: dict):
     user_id = data.get("user_id", 0)
     user = User.objects.filter(id=user_id)
-    if user.exists():
-        user = user.first()
-        user.userinfo.last_active_time = timezone.now()
-        user.userinfo.save(update_fields=["last_active_time"])
-        return True
-    return False
+    if not user.exists():
+        raise DRFViewException(
+            detail=f"No user found for the given user_id: {user_id}.", status_code=status.HTTP_400_BAD_REQUEST
+        )
+    user = user.first()
+    user.userinfo.status = "active"
+    user.userinfo.last_active_time = timezone.now()
+    user.userinfo.save(update_fields=["status", "last_active_time"])
+
+    if settings.USE_CELERY:
+        task_update_user_last_active_time.apply_async(
+            queue="heartbeat",
+            routing_key="heartbeat",
+            kwargs={"user_id": user_id},
+            eta=datetime.utcnow() + timedelta(minutes=2),
+        )
+    else:
+        task_update_user_last_active_time(user_id=user_id)
+
+    return True
 
 
 def process_user_event(message: dict):
-    logger.info("Receivend user event message: ", message)
+    logger.info(f"Receivend user event message: {message} for event: {message.get('event')}")
 
     event = message.get("event")
     data = message.get("data", {})

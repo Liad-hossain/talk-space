@@ -23,9 +23,9 @@ django-cors-headers = "^4.7.0"
 pusher = "^3.3.3"
 drf-spectacular = "^0.28.0"
 django-redis = "^5.4.0"
-taskiq-redis = "^1.0.8"
 cloudinary = "^1.44.0"
-
+celery = {extras = ["redis"], version = "^5.5.3"}
+yarl = "^1.20.1"
 
 [build-system]
 requires = ["poetry-core"]

@@ -1,0 +1,43 @@
+import logging
+import traceback
+from django.utils import timezone
+from celery import shared_task
+from django.contrib.auth.models import User
+from helpers.custom_exception import convert_exception_string_to_one_line
+from core.celery import app
+
+logger = logging.getLogger("stdout")
+
+
+@shared_task(ignore_result=True, time_limit=30)
+def task_update_user_last_active_time(user_id):
+    logger.info(f"Starting to update user last active time for user id: {user_id}")
+
+    user = User.objects.filter(id=user_id)
+    if not user.exists():
+        logger.error(
+            {
+                "message": f"User does not exist for user id: {user_id}",
+                "error": convert_exception_string_to_one_line(traceback.format_exc()),
+            }
+        )
+        return
+
+    try:
+        user = user.first()
+        seconds_ago = (timezone.now() - user.userinfo.last_active_time).total_seconds()
+
+        if seconds_ago < 60:
+            logger.info(f"User last_active_time is less than 1 minute for user id: {user_id}. So skipping the update.")
+            return
+
+        user.userinfo.status = "inactive"
+        user.userinfo.save(update_fields=["status"])
+        logger.info(f"User active status updated to inactive successfully for user id: {user_id}")
+    except Exception:
+        logger.error(
+            {
+                "message": f"Error occurred while updating user last active time for user id: {user_id}",
+                "error": convert_exception_string_to_one_line(traceback.format_exc()),
+            }
+        )

@@ -14,6 +14,8 @@ import sys
 from decouple import config
 import logging.config
 from datetime import timedelta
+from kombu import Queue
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -132,6 +134,7 @@ GLOBAL_REDIS_HOST = config("GLOBAL_REDIS_HOST", default="localhost")
 GLOBAL_REDIS_PORT = config("GLOBAL_REDIS_PORT", default="6379")
 GLOBAL_REDIS_PASSWORD = config("GLOBAL_REDIS_PASSWORD", default=None)
 GLOBAL_REDIS_DB = config("GLOBAL_REDIS_DB", default="0")
+REDIS_HOST_URL = config("REDIS_HOST_URL", default=f"redis://127.0.0.1:6379/")
 
 
 # Internationalization
@@ -219,3 +222,38 @@ BASE_LOGGING_CONFIG = {
 }
 
 logging.config.dictConfig(BASE_LOGGING_CONFIG)
+
+
+USE_CELERY = config("USE_CELERY", cast=int, default=1)
+
+if USE_CELERY:
+    CELERY_BROKER_URL = REDIS_HOST_URL + "1"
+    CELERY_RESULT_BACKEND = REDIS_HOST_URL + "1"
+    CELERY_ACCEPT_CONTENT = ["application/json"]
+    CELERY_TASK_SERIALIZER = "json"
+    CELERY_RESULT_SERIALIZER = "json"
+    CELERY_ENABLE_UTC = True
+    CELERY_TIMEZONE = "UTC"
+
+    CELERY_TASK_DEFAULT_QUEUE = "default"
+    CELERY_TASK_DEFAULT_EXCHANGE = "tasks"
+    CELERY_TASK_DEFAULT_EXCHANGE_TYPE = "topic"
+    CELERY_TASK_DEFAULT_ROUTING_KEY = "default"
+    CELERY_TASK_TRACK_STARTED = True
+    CELERY_ACKS_LATE = True
+    CELERY_BROKER_TRANSPORT = "redis"
+    BROKER_CONNECTION_RETRY = True
+    BROKER_CONNECTION_RETRY_ON_STARTUP = True
+    BROKER_HEARTBEAT = 60
+    BROKER_CONNECTION_TIMEOUT = 30
+    BROKER_TRANSPORT_OPTIONS = {
+        "socket_keepalive": True,
+        "health_check_interval": 2,
+        "heartbeat_interval": 30,
+        "max_retries": 3,
+    }
+
+    CELERY_TASK_QUEUES = (
+        Queue("default", routing_key="default"),
+        Queue("heartbeat", routing_key="heartbeat"),
+    )
