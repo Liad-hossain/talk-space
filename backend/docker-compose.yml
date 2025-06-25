@@ -67,7 +67,7 @@ services:
       dockerfile: ./DockerFile
       args:
         - MODE=DEVELOPMENT
-    container_name: local-celery_default
+    container_name: local-celery-default
     environment: *common-variables
     env_file: .env
     command: "celery -A core worker --loglevel=INFO -Q default --hostname=basic@%h --logfile=/code/logs/celery.log"

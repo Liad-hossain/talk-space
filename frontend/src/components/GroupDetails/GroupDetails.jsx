@@ -11,7 +11,6 @@ import AddIcon from '../../assets/images/add_icon.jpg';
 import InboxMember from "../InboxMember/InboxMember";
 import Exit from '../../assets/images/exit.png';
 import AddMember from "../AddMember/AddMember";
-import { selectedStates } from "../../const";
 
 
 const MAX_LENGTH = 30;
