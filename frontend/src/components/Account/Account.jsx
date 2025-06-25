@@ -191,10 +191,9 @@ const Account = (props) => {
         }
     }
 
-
     useEffect(() => {
         get_profile_data();
-    }, []);
+    },[]);
 
 
     return (

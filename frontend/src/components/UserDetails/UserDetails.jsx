@@ -1,7 +1,7 @@
 import ProfileIcon from "../../assets/icons/profile_avatar.svg";
 import handleHTTPRequest from "../../httpclient";
 import config from "../../externals/config";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import './UserDetails.css';
 import Zoom from 'react-medium-image-zoom';
@@ -35,9 +35,7 @@ const UserDetails = (props) => {
     }
   };
 
-  useEffect(() => {
-    fetch_profile_data();
-  }, []);
+  fetch_profile_data();
 
   return (
     <div className="user-details-container">
