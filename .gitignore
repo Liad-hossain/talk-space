@@ -95,7 +95,6 @@
 **/logs/*
 **/.vscode/
 **/*_report.csv
-__init__.py
 
 ### PEM File ###
 **/v3*.pem
