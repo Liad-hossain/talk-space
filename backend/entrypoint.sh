@@ -2,7 +2,7 @@
 set -e
 
 # Run DB migrations
-python ./src/manage.py migrate
+python ./src/manage.py migrate --noinput
 
 python ./src/manage.py collectstatic --noinput
 
