@@ -11,7 +11,7 @@ python ./src/manage.py start_redis_inbox_listener &
 
 if [[ $CREATE_SUPERUSER ]];
 then
-  python world_champ_2022/manage.py createsuperuser --no-input
+  python ./src/manage.py createsuperuser --no-input
 fi
 
 if [[ "$ENVIRONMENT" == "DEBUG" || "$ENVIRONMENT" == "DEVELOPMENT" ]];
