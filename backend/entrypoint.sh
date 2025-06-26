@@ -9,7 +9,7 @@ python ./src/manage.py collectstatic --noinput --clear
 # TODO: Remove the below line when using docker compose or kubernetes
 python ./src/manage.py start_redis_inbox_listener &
 
-PYTHONPATH=/app/src celery -A core worker --loglevel=INFO -Q heartbeat --hostname=basic@%h --logfile=/code/logs/celery.log &
+PYTHONPATH=/app/src celery -A core worker --loglevel=INFO -Q heartbeat --hostname=basic@%h&
 
 if [[ $CREATE_SUPERUSER ]];
 then
