@@ -24,3 +24,7 @@ fi
 exec "$@"
 
 python ./src/manage.py showmigrations
+
+python ./src/manage.py dbshell
+\dt  # List all tables
+SELECT * FROM django_migrations;  # See applied migrations
