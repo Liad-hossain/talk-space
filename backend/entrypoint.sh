@@ -7,6 +7,8 @@ python ./src/manage.py migrate --noinput --verbosity 3
 
 python ./src/manage.py collectstatic --noinput --clear
 
+python ./src/manage.py start_redis_inbox_listener &
+
 if [[ "$ENVIRONMENT" == "DEBUG" || "$ENVIRONMENT" == "DEVELOPMENT" ]];
 then
     python ./src/manage.py runserver 0.0.0.0:8000
@@ -24,7 +26,3 @@ fi
 exec "$@"
 
 python ./src/manage.py showmigrations
-
-python ./src/manage.py dbshell
-\dt  # List all tables
-SELECT * FROM django_migrations;  # See applied migrations
