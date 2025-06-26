@@ -7,6 +7,7 @@ python ./src/manage.py migrate --noinput --verbosity 3
 
 python ./src/manage.py collectstatic --noinput --clear
 
+# TODO: Remove the below line when using docker compose or kubernetes
 python ./src/manage.py start_redis_inbox_listener &
 
 if [[ $CREATE_SUPERUSER ]];
