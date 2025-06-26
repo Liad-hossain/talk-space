@@ -9,6 +9,11 @@ python ./src/manage.py collectstatic --noinput --clear
 
 python ./src/manage.py start_redis_inbox_listener &
 
+if [[ $CREATE_SUPERUSER ]];
+then
+  python world_champ_2022/manage.py createsuperuser --no-input
+fi
+
 if [[ "$ENVIRONMENT" == "DEBUG" || "$ENVIRONMENT" == "DEVELOPMENT" ]];
 then
     python ./src/manage.py runserver 0.0.0.0:8000
