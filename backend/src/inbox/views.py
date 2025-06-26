@@ -103,6 +103,7 @@ def publish_inbox_event_view(request: Request, *args, **kwargs):
     body = request.data
     if not body.get("data"):
         body["data"] = {}
+    body["channel"] = RedisChannelNames.INBOX_EVENT
     body["data"]["inbox_id"] = kwargs.get("inbox_id")
 
     is_success = publish_message_to_channel(channel_name=RedisChannelNames.INBOX_EVENT, message=body)

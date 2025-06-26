@@ -2,13 +2,14 @@
 set -e
 
 # Run DB migrations
-python ./src/manage.py makemigrations --noinput
 python ./src/manage.py migrate --noinput --verbosity 3
 
 python ./src/manage.py collectstatic --noinput --clear
 
 # TODO: Remove the below line when using docker compose or kubernetes
 python ./src/manage.py start_redis_inbox_listener &
+
+celery -A core worker --loglevel=INFO -Q heartbeat --hostname=basic@%h --logfile=/code/logs/celery.log &
 
 if [[ $CREATE_SUPERUSER ]];
 then
