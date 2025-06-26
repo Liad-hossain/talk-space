@@ -26,4 +26,5 @@ COPY ./. /app
 RUN chmod +x /app/entrypoint.sh
 
 # TODO Need to remove this
+
 ENTRYPOINT [ "/app/entrypoint.sh" ]
