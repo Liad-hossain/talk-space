@@ -99,7 +99,6 @@ def update_profile_view(request: Request, *args, **kwargs) -> Response:
     logger.info("Entered update profile photo view.")
     file_keys = [key for key, value in request.data.items() if hasattr(value, "read")]
     for key in file_keys:
-        print(f"Removing file from data: {key}")
         request.data.pop(key)
 
     is_success = update_profile(

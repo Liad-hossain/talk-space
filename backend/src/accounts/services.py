@@ -124,7 +124,6 @@ def connect_user(data: dict):
 def disconnect_user(data: dict):
     user_id = data.get("user_id", 0)
     last_active_time = data.get("last_active_time", "")
-    print("last_active_time: ", last_active_time)
 
     user = User.objects.filter(id=user_id)
     if user.exists() and last_active_time:

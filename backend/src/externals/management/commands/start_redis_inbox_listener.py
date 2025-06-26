@@ -27,7 +27,7 @@ class Command(BaseCommand):
         listener_thread.daemon = True
         listener_thread.start()
 
-        print("Redis pubsub listener started successfully!")
+        logger.info("Redis pubsub listener started successfully!")
 
         try:
             listener_thread.join()
@@ -40,7 +40,7 @@ class Command(BaseCommand):
         for key, channel in RedisChannelNames.__dict__.items():
             if isinstance(channel, str) and key != "__module__":
                 pubsub.subscribe(channel)
-                print(f"Redis channel name: {channel} subscribed successfully.")
+                logger.info(f"Redis channel name: {channel} subscribed successfully.")
 
         for message in pubsub.listen():
             if message["type"] == "message":
