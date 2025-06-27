@@ -133,6 +133,8 @@ const Chat = () => {
 
         get_user_profile();
 
+        send_heartbeat();
+
         const intervalId =setInterval(() => {
             send_heartbeat();
         }, 40000);
