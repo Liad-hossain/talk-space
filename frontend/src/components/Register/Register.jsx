@@ -70,7 +70,7 @@ const Register = (props) => {
                         onClick={togglePasswordVisibility}
                         aria-label={showPassword ? "Hide password" : "Show password"}
                     >
-                        {!showPassword ? <FaEyeSlash /> : <FaEye />}
+                        {showPassword ? <FaEyeSlash /> : <FaEye />}
                     </button>
                 </div>
                 <div className='form-password'>

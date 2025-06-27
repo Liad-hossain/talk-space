@@ -58,7 +58,7 @@ const Login = (props) => {
                         onClick={togglePasswordVisibility}
                         aria-label={showPassword ? "Hide password" : "Show password"}
                     >
-                        {!showPassword ? <FaEyeSlash /> : <FaEye />}
+                        {showPassword ? <FaEyeSlash /> : <FaEye />}
                     </button>
                 </div>
                 <button type='submit' className='form-button'>Sign In</button>
