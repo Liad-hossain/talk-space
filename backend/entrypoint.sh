@@ -1,8 +1,10 @@
 #!/bin/bash
 set -e
 
+echo "Starting service: $SERVICE"
+
 if [[ "$SERVICE" == "app" ]]; then
-  ./app_entrypoint.sh
+  /app/app_entrypoint.sh
 
 elif [[ "$SERVICE" == "redis-listener" ]]; then
   python ./src/manage.py start_redis_inbox_listener
