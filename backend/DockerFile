@@ -69,3 +69,6 @@ COPY . /app
 
 # Ensure entrypoint is executable
 RUN chmod +x /app/entrypoint.sh
+
+# TODO: Remove the below line when using docker compose or kubernetes
+ENTRYPOINT [ "/app/entrypoint.sh" ]
