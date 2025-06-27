@@ -72,4 +72,4 @@ RUN chmod +x /app/entrypoint.sh
 RUN chmod +x /app/app_entrypoint.sh
 
 # TODO: Remove the below line when using docker compose or kubernetes
-# ENTRYPOINT [ "/app/entrypoint.sh" ]
+ENTRYPOINT [ "/app/entrypoint.sh" ]
