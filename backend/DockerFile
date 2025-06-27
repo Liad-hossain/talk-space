@@ -123,4 +123,7 @@ RUN apt-get update && \
     apt-get install --no-install-recommends -y tini && \
     rm -rf /var/lib/apt/lists/*
 
+RUN chmod +x /app/entrypoint.sh
+RUN chmod +x /app/app_entrypoint.sh
+
 ENTRYPOINT ["tini", "--", "/app/entrypoint.sh"]
