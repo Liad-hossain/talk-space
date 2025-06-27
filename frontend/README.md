@@ -1,5 +1,7 @@
 # Getting Started with Create React App
 
+## Make Sure .env file is created inside frontend directory and all the required credentials given inside .env.example are present inside .env file
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
