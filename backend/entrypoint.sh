@@ -1,3 +1,6 @@
+#!/bin/bash
+set -e
+
 if [[ $SERVICE == "app" ]];
 then
   ./entrypoint.sh

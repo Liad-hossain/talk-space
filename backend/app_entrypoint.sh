@@ -27,5 +27,3 @@ fi
 
 # Run the Django server
 exec "$@"
-
-python ./src/manage.py showmigrations
