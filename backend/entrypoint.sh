@@ -2,7 +2,7 @@
 set -e
 
 if [[ "$SERVICE" == "app" ]]; then
-  ./entrypoint.sh
+  ./app_entrypoint.sh
 
 elif [[ "$SERVICE" == "redis-listener" ]]; then
   python ./src/manage.py start_redis_inbox_listener
