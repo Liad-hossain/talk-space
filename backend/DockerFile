@@ -30,7 +30,52 @@
 # # ENTRYPOINT [ "/app/entrypoint.sh" ]
 
 
-# --- Build stage ---
+# # --- Build stage ---
+# FROM python:3.11-slim-bookworm as builder
+
+# ENV POETRY_HOME="/opt/poetry" \
+#     PATH="/opt/poetry/bin:$PATH" \
+#     POETRY_VIRTUALENVS_CREATE=false \
+#     PYTHONUNBUFFERED=1
+
+# WORKDIR /app
+
+# # Install build dependencies
+# RUN apt-get update && apt-get install -y gcc curl
+
+# # Install Poetry
+# RUN pip install poetry==1.8.5
+
+# # Copy only files needed to install dependencies
+# COPY ./pyproject.toml ./poetry.lock /app/
+
+# # Install project dependencies
+# RUN poetry install --no-interaction --no-ansi
+
+
+# # --- Final stage ---
+# FROM python:3.11-slim-bookworm
+
+# ENV PYTHONUNBUFFERED=1
+
+# WORKDIR /app
+
+# # Copy virtualenv or site-packages from builder
+# COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+# COPY --from=builder /usr/local/bin /usr/local/bin
+
+# # Copy app files (source code, entrypoint, etc.)
+# COPY . /app
+
+# # Ensure entrypoint is executable
+# RUN chmod +x /app/entrypoint.sh
+# RUN chmod +x /app/app_entrypoint.sh
+
+# # TODO: Remove the below line when using docker compose or kubernetes
+# ENTRYPOINT [ "/app/entrypoint.sh" ]
+
+
+# Stage 1: Builder
 FROM python:3.11-slim-bookworm as builder
 
 ENV POETRY_HOME="/opt/poetry" \
@@ -40,36 +85,42 @@ ENV POETRY_HOME="/opt/poetry" \
 
 WORKDIR /app
 
-# Install build dependencies
-RUN apt-get update && apt-get install -y gcc curl
+# 1. Install only essential build dependencies
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y \
+    gcc \
+    python3-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install Poetry
-RUN pip install poetry==1.8.5
+# 2. Install Poetry without pip (saves ~20MB)
+RUN pip install --no-cache-dir poetry==1.8.5
 
-# Copy only files needed to install dependencies
-COPY ./pyproject.toml ./poetry.lock /app/
+# 3. Copy only dependency files
+COPY pyproject.toml poetry.lock ./
 
-# Install project dependencies
-RUN poetry install --no-interaction --no-ansi
+# 4. Install deps without dev packages
+RUN poetry install --only main --no-interaction --no-ansi
 
 
-# --- Final stage ---
+# Stage 2: Runtime
 FROM python:3.11-slim-bookworm
-
-ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# Copy virtualenv or site-packages from builder
+# 1. Copy only necessary files from builder
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
-# Copy app files (source code, entrypoint, etc.)
-COPY . /app
+# 2. Copy app files selectively (exclude tests, docs, etc.)
+COPY src/ ./src/
+COPY entrypoint.sh app_entrypoint.sh ./
 
-# Ensure entrypoint is executable
-RUN chmod +x /app/entrypoint.sh
-RUN chmod +x /app/app_entrypoint.sh
+# 3. Cleanup Python cache
+RUN find /usr/local/lib/python3.11 -type d -name '__pycache__' -exec rm -rf {} +
 
-# TODO: Remove the below line when using docker compose or kubernetes
-ENTRYPOINT [ "/app/entrypoint.sh" ]
+# 4. Use lightweight init system
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y tini && \
+    rm -rf /var/lib/apt/lists/*
+
+ENTRYPOINT ["tini", "--", "/app/entrypoint.sh"]
