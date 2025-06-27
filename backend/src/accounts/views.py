@@ -78,7 +78,9 @@ class CustomTokenRefreshView(TokenRefreshView):
 @permission_classes((IsAuthenticated,))
 def publish_user_event_view(request: Request, *args, **kwargs) -> Response:
     logger.info("Entered publish user event view.")
-    is_success = publish_message_to_channel(channel_name=RedisChannelNames.USER_EVENT, message=request.data)
+    message = request.data
+    message["channel"] = RedisChannelNames.USER_EVENT
+    is_success = publish_message_to_channel(channel_name=RedisChannelNames.USER_EVENT, message=message)
     if is_success:
         logger.info("User event published successfully.")
 

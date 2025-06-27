@@ -78,8 +78,12 @@ def login(body: dict) -> dict:
     publish_message_to_channel(
         channel_name=RedisChannelNames.USER_EVENT,
         message={
+            "channel": RedisChannelNames.USER_EVENT,
             "event": UserEvents.LOGIN,
-            "data": {"user_id": user.id, "last_active_time": timezone.now().isoformat()},
+            "data": {
+                "user_id": user.id,
+                "last_active_time": timezone.now().isoformat(),
+            },
         },
     )
     refresh = serializer.get_token(serializer.user)
@@ -99,8 +103,12 @@ def logout(user: User) -> dict:
     publish_message_to_channel(
         channel_name=RedisChannelNames.USER_EVENT,
         message={
+            "channel": RedisChannelNames.USER_EVENT,
             "event": UserEvents.LOGOUT,
-            "data": {"user_id": user.id, "last_active_time": timezone.now().isoformat()},
+            "data": {
+                "user_id": user.id,
+                "last_active_time": timezone.now().isoformat(),
+            },
         },
     )
     logger.info("Logout process completed successfull!!!")

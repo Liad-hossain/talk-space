@@ -17,7 +17,7 @@ class Command(BaseCommand):
         self.redis_client = None
 
     def handle(self, *args, **options):
-        self.redis_client = redis.from_url(settings.REDIS_HOST_URL)
+        self.redis_client = redis.from_url(settings.REDIS_HOST_URL + "0")
 
         # Starting redis pubsub listener in a separate thread
         listener_thread = threading.Thread(
@@ -51,17 +51,15 @@ class Command(BaseCommand):
         Message format:
           {
               "channel": "inbox_event",
-              "data": {
-                  "event_type": "",
-                  "data": {}
-              }
+              "event: "seen",
+              "data": {}
           }
         """
+        message = json.loads(message.get("data"))
         logger.info("Received Message: ", message)
-        data = json.loads(message.get("data"))
         if message.get("channel") == RedisChannelNames.INBOX_EVENT:
-            process_inbox_event(data)
+            process_inbox_event(message)
         elif message.get("channel") == RedisChannelNames.USER_EVENT:
-            process_user_event(data)
+            process_user_event(message)
         else:
             logger.info("Invalid channel name: ", message.get("channel"))

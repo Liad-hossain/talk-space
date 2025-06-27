@@ -10,7 +10,7 @@ logger = logging.getLogger("stdout")
 
 
 def get_global_redis():
-    return redis.from_url(settings.REDIS_HOST_URL)
+    return redis.from_url(settings.REDIS_HOST_URL + "0")
 
 
 def publish_message_to_channel(channel_name: str, message: dict):

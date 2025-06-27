@@ -909,11 +909,11 @@ def process_delete_chat_event(data: dict) -> bool:
     return True
 
 
-def process_inbox_event(data: dict) -> bool:
-    logger.info(f"Starting inbox event process using data: {data} ....")
+def process_inbox_event(message: dict) -> bool:
+    logger.info(f"Starting inbox event process using data: {message} ....")
     try:
-        event = data.get("event", "")
-        data = data.get("data", {})
+        event = message.get("event", "")
+        data = message.get("data", {})
         if not data.get("inbox_id", 0):
             logger.info("Inbox id is required for inbox event.")
             return False

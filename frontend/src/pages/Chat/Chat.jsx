@@ -135,7 +135,7 @@ const Chat = () => {
 
         const intervalId =setInterval(() => {
             send_heartbeat();
-        }, 30000);
+        }, 40000);
 
         return () => clearInterval(intervalId);
 
