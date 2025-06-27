@@ -14,14 +14,14 @@ fi
 
 if [[ "$ENVIRONMENT" == "DEBUG" || "$ENVIRONMENT" == "DEVELOPMENT" ]];
 then
-    python ./src/manage.py runserver 0.0.0.0:8000
+    python ./src/manage.py runserver 0.0.0.0:"$PORT"
 
 elif [[ "$ENVIRONMENT" == "LIVE" ]];
 then
-    (gunicorn core.asgi:application -w 3 -k uvicorn.workers.UvicornWorker --chdir src --bind 0.0.0.0:8000 --access-logfile - --error-logfile -)
+    (gunicorn core.asgi:application -w 3 -k uvicorn.workers.UvicornWorker --chdir src --bind 0.0.0.0:"$PORT" --access-logfile - --error-logfile -)
 
 else
-    (gunicorn core.asgi:application -w 3 -k uvicorn.workers.UvicornWorker --chdir src --bind 0.0.0.0:8000 --access-logfile - --error-logfile -)
+    (gunicorn core.asgi:application -w 3 -k uvicorn.workers.UvicornWorker --chdir src --bind 0.0.0.0:"$PORT" --access-logfile - --error-logfile -)
 
 fi
 
