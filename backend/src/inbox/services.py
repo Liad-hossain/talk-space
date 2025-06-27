@@ -43,7 +43,7 @@ def get_chats(user_id: int, offset: int = 0, limit: int = 20, **kwargs) -> list[
         query = Q(inboxmember__user_id=user_id)
         search = kwargs.get("search", None)
         if search:
-            query = query & Q(inboxmember__nickname__icontains=search)
+            query = query & (Q(inbox_name__icontains=search) | Q(inbox_name=""))
         inboxes = (
             Inbox.objects.filter(query)
             .annotate(unseen_count=Subquery(unseen_count, output_field=IntegerField()))
@@ -61,6 +61,7 @@ def get_chats(user_id: int, offset: int = 0, limit: int = 20, **kwargs) -> list[
             last_message_sender_name = None
             members = list()
             user_id_list = list()
+            discard_inbox = False
             for member in inbox_members:
                 members.append(
                     {
@@ -76,11 +77,17 @@ def get_chats(user_id: int, offset: int = 0, limit: int = 20, **kwargs) -> list[
                     }
                 )
                 if member.user_id != user_id:
+                    if search and not inbox.inbox_name and not search.lower() in member.user.username.lower():
+                        discard_inbox = True
+                        break
+
                     receiver_id = member.user_id
                     receiver_name = member.user.username
                     receiver_photo = member.user.userinfo.profile_photo
                     user_id_list.append(member.user_id)
 
+            if discard_inbox:
+                continue
             last_message_sender_name = (
                 ""
                 if not inbox.last_message_sender

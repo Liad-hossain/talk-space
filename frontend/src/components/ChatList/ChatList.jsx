@@ -170,58 +170,6 @@ const ChatList = (props) => {
     }
 
 
-    const fetchData = async() => {
-        if(props.currentState === selectedStates.CHATS){
-            const url = config.inbox.get_chats(props.user_id);
-            let params = {
-                offset: 0,
-                limit: friendLengthRef.current,
-            }
-            const response  = await handleHTTPRequest('GET', url, {}, params, null);
-            if (response.status !== 200){
-                console.log("Error: ", response.data);
-                localStorage.clear();
-                navigate("/")
-            }
-            else{
-                props.setFriendList(response.data.dataSource);
-                if(inboxIdRef.current === null) return;
-                props.setIsActive(response.data.dataSource.filter(friend => friend.inbox_id === inboxIdRef.current)[0].is_active);
-                props.setLastActiveTime(response.data.dataSource.filter(friend => friend.inbox_id === inboxIdRef.current)[0].last_active_time);
-            }
-        }else{
-            let url= ""
-            let params = {
-                offset: 0,
-                limit: userLengthRef.current,
-            }
-            if (props.currentState === selectedStates.GROUPS){
-                url = config.inbox.get_groups(props.user_id);
-            }
-            else{
-                url = config.inbox.get_users(props.user_id);
-                if(props.currentState === selectedStates.ACTIVE_USERS){
-                    params["is_active"] = true;
-                }
-                else if(props.currentState === selectedStates.INACTIVE_USERS){
-                    params["is_active"] = false;
-                }
-            }
-            const response  = await handleHTTPRequest('GET', url, {}, params, null);
-            if (response.status !== 200){
-                console.log("Error: ", response.data);
-                localStorage.clear();
-                navigate("/")
-            }
-            else{
-                props.setUserList(response.data.dataSource);
-                if(inboxIdRef.current === null) return;
-                props.setIsActive(response.data.dataSource.filter(friend => friend.inbox_id === inboxIdRef.current)[0].is_active);
-                props.setLastActiveTime(response.data.dataSource.filter(friend => friend.inbox_id === inboxIdRef.current)[0].last_active_time);
-            }
-        }
-    }
-
     const handleClearChatEvent = (data) => {
         console.log("Chat list cleat chat event data: ",data)
         if(props.currentState === selectedStates.CHATS){
@@ -298,12 +246,6 @@ const ChatList = (props) => {
         channel.bind('delete_chat', (data) => {
             handleDeleteChatEvent(data);
         })
-
-        const intervalId =setInterval(() => {
-            fetchData();
-        }, 30000);
-
-        return () => clearInterval(intervalId);
 
     }, [props.currentState, props.isCreateGroup]);
 
