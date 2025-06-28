@@ -91,9 +91,9 @@ def get_chats(user_id: int, offset: int = 0, limit: int = 20, **kwargs) -> list[
             last_message_sender_name = (
                 ""
                 if not inbox.last_message_sender
-                else member.user.first_name
-                if inbox.last_message_sender == receiver_id
                 else "You"
+                if inbox.last_message_sender == user_id
+                else member.user.first_name
             )
 
             inbox_data = inbox.__dict__
