@@ -84,27 +84,34 @@ const ChatList = (props) => {
             offset: (is_pagination ? props.friendList.length : 0),
             limit: limit,
         }
-        const response  = await handleHTTPRequest('GET', url, {}, params, null);
-        if (response.status !== 200){
-            console.log("Error: ", response.data);
+
+        try{
+            const response  = await handleHTTPRequest('GET', url, {}, params, null);
+            if (response.status !== 200){
+                console.log("Error: ", response.data);
+                localStorage.clear();
+                navigate("/")
+            }
+            else{
+                props.setUserList([]);
+                if (!is_pagination){
+                    props.setFriendList(response.data.dataSource);
+                    return;
+                }
+
+                if(response.data.dataSource.length < 100){
+                    setHasMore(false);
+                    return;
+                }
+                props.setFriendList((prevItems) => [
+                    ...prevItems,
+                    ...response.data.dataSource,
+                ]);
+            }
+        }catch(error){
+            console.log("Error: ", error);
             localStorage.clear();
             navigate("/")
-        }
-        else{
-            props.setUserList([]);
-            if (!is_pagination){
-                props.setFriendList(response.data.dataSource);
-                return;
-            }
-
-            if(response.data.dataSource.length < 100){
-                setHasMore(false);
-                return;
-            }
-            props.setFriendList((prevItems) => [
-                ...prevItems,
-                ...response.data.dataSource,
-            ]);
         }
     }
 
@@ -126,39 +133,45 @@ const ChatList = (props) => {
             offset: (is_pagination ? props.userList.length : 0),
             limit: limit,
         }
-        if (props.currentState === selectedStates.GROUPS){
-            url = config.inbox.get_groups(props.user_id);
-        }
-        else{
-            url = config.inbox.get_users(props.user_id);
-            if(props.currentState === selectedStates.ACTIVE_USERS){
-                params["is_active"] = true;
+        try{
+            if (props.currentState === selectedStates.GROUPS){
+                url = config.inbox.get_groups(props.user_id);
             }
-            else if(props.currentState === selectedStates.INACTIVE_USERS){
-                params["is_active"] = false;
+            else{
+                url = config.inbox.get_users(props.user_id);
+                if(props.currentState === selectedStates.ACTIVE_USERS){
+                    params["is_active"] = true;
+                }
+                else if(props.currentState === selectedStates.INACTIVE_USERS){
+                    params["is_active"] = false;
+                }
             }
-        }
-        const response  = await handleHTTPRequest('GET', url, {}, params, null);
-        if (response.status !== 200){
-            console.log("Error: ", response.data);
+            const response  = await handleHTTPRequest('GET', url, {}, params, null);
+            if (response.status !== 200){
+                console.log("Error: ", response.data);
+                localStorage.clear();
+                navigate("/")
+            }
+            else{
+                props.setFriendList([]);
+                if (!is_pagination){
+                    props.setUserList(response.data.dataSource);
+                    return;
+                }
+
+                if(response.data.dataSource.length === 0){
+                    setHasMore(false);
+                    return;
+                }
+                props.setUserList((prevItems) => [
+                    ...prevItems,
+                    ...response.data.dataSource,
+                ]);
+            }
+        }catch(error){
+            console.log("Error: ", error);
             localStorage.clear();
             navigate("/")
-        }
-        else{
-            props.setFriendList([]);
-            if (!is_pagination){
-                props.setUserList(response.data.dataSource);
-                return;
-            }
-
-            if(response.data.dataSource.length === 0){
-                setHasMore(false);
-                return;
-            }
-            props.setUserList((prevItems) => [
-                ...prevItems,
-                ...response.data.dataSource,
-            ]);
         }
     }
 
