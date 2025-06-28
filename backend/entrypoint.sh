@@ -14,6 +14,9 @@ elif [[ "$SERVICE" == "celery-heartbeat" ]]; then
   PYTHONPATH=/app/src celery -A core worker --loglevel=INFO -Q heartbeat --hostname=basic@%h &
   exec python -m http.server "$PORT"
 
+elif [[ "$SERVICE" == "celery-beat" ]]; then
+  PYTHONPATH=/app/src celery -A core beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler &
+  exec python -m http.server "$PORT"
 else
   echo "❌ Unknown SERVICE: $SERVICE"
   exit 1

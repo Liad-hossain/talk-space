@@ -21,6 +21,7 @@ class UserEvents:
     LOGIN = "login"
     LOGOUT = "logout"
     HEARTBEAT = "heartbeat"
+    CHECK_HEALTH = "check_health"
 
 
 class RedisChannelNames:

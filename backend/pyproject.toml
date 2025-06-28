@@ -25,6 +25,7 @@ drf-spectacular = "^0.28.0"
 django-redis = "^5.4.0"
 cloudinary = "^1.44.0"
 celery = {extras = ["redis"], version = "^5.5.3"}
+django-celery-beat = "^2.8.1"
 
 [build-system]
 requires = ["poetry-core"]

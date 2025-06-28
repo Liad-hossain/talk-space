@@ -15,7 +15,7 @@ from drf_spectacular.utils import extend_schema, inline_serializer
 
 from accounts.services import register, login, logout, get_profile, update_profile
 from externals.redis_utils import publish_message_to_channel
-from helpers.const import RedisChannelNames
+from helpers.const import RedisChannelNames, UserEvents
 
 logger = logging.getLogger("stdout")
 
@@ -24,7 +24,12 @@ logger = logging.getLogger("stdout")
 @permission_classes((AllowAny,))
 def check_health_view(request: Request) -> Response:
     logger.info("Entered health check view.")
+    message = {"channel": RedisChannelNames.USER_EVENT, "event": UserEvents.CHECK_HEALTH, "data": {}}
+    is_success = publish_message_to_channel(channel_name=RedisChannelNames.USER_EVENT, message=message)
     message = "The service is healthy."
+    if not is_success:
+        message = "Couldn't publish health check message to redis."
+        return Response(data={"success": False, "message": message}, status=400)
     return Response(data={"success": True, "message": message}, status=200)
 
 

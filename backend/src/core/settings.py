@@ -15,6 +15,7 @@ from decouple import config
 import logging.config
 from datetime import timedelta
 from kombu import Queue
+from celery.schedules import crontab
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -50,6 +51,7 @@ INSTALLED_APPS = [
     "blacklist",
     "inbox",
     "externals",
+    "django_celery_beat",
 ]
 
 MIDDLEWARE = [
@@ -225,10 +227,11 @@ logging.config.dictConfig(BASE_LOGGING_CONFIG)
 
 
 USE_CELERY = config("USE_CELERY", cast=int, default=1)
+USE_BEAT = config("USE_BEAT", cast=int, default=1)
 
 if USE_CELERY:
     CELERY_BROKER_URL = REDIS_HOST_URL + "1"
-    CELERY_RESULT_BACKEND = REDIS_HOST_URL + "1"
+    CELERY_RESULT_BACKEND = REDIS_HOST_URL + "2"
     CELERY_ACCEPT_CONTENT = ["application/json"]
     CELERY_TASK_SERIALIZER = "json"
     CELERY_RESULT_SERIALIZER = "json"
@@ -257,3 +260,12 @@ if USE_CELERY:
         Queue("default", routing_key="default"),
         Queue("heartbeat", routing_key="heartbeat"),
     )
+
+if USE_BEAT:
+    CELERY_BEAT_SCHEDULE = {
+        "task_trigger_health_check": {
+            "task": "accounts.tasks.task_trigger_health_check",
+            "schedule": crontab(minute="*/2"),
+            "options": {"queue": "heartbeat", "routing_key": "heartbeat"},
+        },
+    }

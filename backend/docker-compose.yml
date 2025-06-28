@@ -4,8 +4,9 @@ x-common-variables: &common-variables
   DEBUG: 1
   ENVIRONMENT: DEVELOPMENT
   USE_CELERY: 1
+  USE_BEAT: 1
   CELERY_BROKER_URL: "redis://:8765@redis:6379/1"
-  CELERY_RESULT_BACKEND: "redis://:8765@redis:6379/1"
+  CELERY_RESULT_BACKEND: "redis://:8765@redis:6379/2"
   PYTHONPATH: /app/src
 
 services:
@@ -70,7 +71,7 @@ services:
     container_name: local-celery-default
     environment: *common-variables
     env_file: .env
-    entrypoint: "celery -A core worker --loglevel=INFO -Q default --hostname=basic@%h --logfile=/code/logs/celery.log"
+    entrypoint: "celery -A core worker --loglevel=INFO -Q default --hostname=basic@%h --logfile=/code/logs/celery.log && "
     volumes:
       - ./logs/celery-default/:/code/logs/
     depends_on:
@@ -88,6 +89,21 @@ services:
     entrypoint: "celery -A core worker --loglevel=INFO -Q heartbeat --hostname=basic@%h --logfile=/code/logs/celery.log"
     volumes:
       - ./logs/celery-heartbeat/:/code/logs/
+    depends_on:
+      - redis
+
+  celery-beat:
+    build:
+      context: .
+      dockerfile: ./DockerFile
+      args:
+        - MODE=DEVELOPMENT
+    container_name: local-celery_beat
+    environment: *common-variables
+    env_file: .env
+    entrypoint: "celery -A core beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler --logfile=/code/logs/celery.log"
+    volumes:
+      - ./logs/celery-beat/:/code/logs/
     depends_on:
       - redis
 

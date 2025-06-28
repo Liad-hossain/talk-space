@@ -170,7 +170,7 @@ def process_user_heartbeat(data: dict):
 
 
 def process_user_event(message: dict):
-    logger.info(f"Receivend user event message: {message} for event: {message.get('event')}")
+    logger.info(f"Received user event message: {message} for event: {message.get('event')}")
 
     event = message.get("event")
     data = message.get("data", {})
@@ -183,6 +183,9 @@ def process_user_event(message: dict):
 
     elif event == UserEvents.HEARTBEAT:
         is_success = process_user_heartbeat(data)
+
+    elif event == UserEvents.CHECK_HEALTH:
+        is_success = True
 
     if is_success:
         logger.info(f"User event process for event: {event} is completed successfully!!!")
