@@ -90,7 +90,7 @@ def publish_user_event_view(request: Request, *args, **kwargs) -> Response:
 @api_view(["GET"])
 @permission_classes((IsAuthenticated,))
 def get_profile_view(request: Request, *args, **kwargs) -> Response:
-    logger.info("Entered get profile photo view.")
+    logger.info("Entered get profile view.")
     data = get_profile(user_id=kwargs.get("user_id"))
     return Response(data={"success": True, "dataSource": data}, status=200)
 
@@ -98,7 +98,7 @@ def get_profile_view(request: Request, *args, **kwargs) -> Response:
 @api_view(["POST"])
 @permission_classes((IsAuthenticated,))
 def update_profile_view(request: Request, *args, **kwargs) -> Response:
-    logger.info("Entered update profile photo view.")
+    logger.info("Entered update profile view.")
     file_keys = [key for key, value in request.data.items() if hasattr(value, "read")]
     for key in file_keys:
         request.data.pop(key)

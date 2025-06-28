@@ -190,14 +190,17 @@ def process_user_event(message: dict):
 
 
 def get_profile(user_id: int) -> dict:
+    logger.info("Starting user profile fetch process...")
     user = User.objects.filter(id=user_id)
     if not user.exists():
         raise DRFViewException(detail="User does not exist.", status_code=status.HTTP_400_BAD_REQUEST)
 
+    logger.info("User profile fetch process completed successfully!!!")
     return UserSerializer(user.first()).data
 
 
 def update_profile(user_id: int, data: dict = dict(), file_obj=None) -> bool:
+    logger.info("Starting user profile update process...")
     user = User.objects.filter(id=user_id).first()
     if not user:
         raise DRFViewException(detail="User does not exist.", status_code=status.HTTP_400_BAD_REQUEST)
@@ -240,4 +243,6 @@ def update_profile(user_id: int, data: dict = dict(), file_obj=None) -> bool:
             ]
         )
 
+    if is_success:
+        logger.info("User profile update process completed successfully!!!")
     return is_success
