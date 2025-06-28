@@ -265,7 +265,7 @@ if USE_BEAT:
     CELERY_BEAT_SCHEDULE = {
         "task_trigger_health_check": {
             "task": "accounts.tasks.task_trigger_health_check",
-            "schedule": crontab(minute="*/2"),
+            "schedule": crontab(minute="*/5"),
             "options": {"queue": "heartbeat", "routing_key": "heartbeat"},
         },
     }
