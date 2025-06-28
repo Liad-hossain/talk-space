@@ -58,7 +58,7 @@ def get_chats(user_id: int, offset: int = 0, limit: int = 20, **kwargs) -> list[
             receiver_id = None
             receiver_name = None
             receiver_photo = None
-            last_message_sender_name = None
+            last_message_sender_name = ""
             members = list()
             user_id_list = list()
             discard_inbox = False
@@ -86,15 +86,17 @@ def get_chats(user_id: int, offset: int = 0, limit: int = 20, **kwargs) -> list[
                     receiver_photo = member.user.userinfo.profile_photo
                     user_id_list.append(member.user_id)
 
+                if member.user_id == inbox.last_message_sender:
+                    last_message_sender_name = (
+                        ""
+                        if not inbox.last_message_sender
+                        else "You"
+                        if inbox.last_message_sender == user_id
+                        else member.user.first_name
+                    )
+
             if discard_inbox:
                 continue
-            last_message_sender_name = (
-                ""
-                if not inbox.last_message_sender
-                else "You"
-                if inbox.last_message_sender == user_id
-                else member.user.first_name
-            )
 
             inbox_data = inbox.__dict__
             inbox_data["inbox_id"] = inbox_data.pop("id")
