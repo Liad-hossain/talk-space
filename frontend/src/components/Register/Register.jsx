@@ -81,7 +81,7 @@ const Register = (props) => {
                         onClick={toggleConfirmPasswordVisibility}
                         aria-label={showPassword ? "Hide password" : "Show password"}
                     >
-                        {!showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                        {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
                     </button>
                 </div>
                 <input type='city' placeholder='City' className='form-input' onChange={(e) => setCity(e.target.value)}/>
