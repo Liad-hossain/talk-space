@@ -17,6 +17,7 @@ const User = (props) => {
         props.setSelectedId(props.currentState === selectedStates.GROUPS ? props.inbox_id : props.id);
         props.setIsActive(props.is_active);
         props.setLastActiveTime(props.last_active_time);
+        props.setReceiverId(props.inbox_members.filter(member => member.user_id !== props.user_id).map(member => member.user_id)[0]);
 
         const body = {
             event: InboxEvents.SEEN,
